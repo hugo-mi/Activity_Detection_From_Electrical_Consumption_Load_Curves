@@ -1,4 +1,6 @@
-# Projet Fil Rouge : Détection d'activité : Analyse d'une courbe de charge
+# Projet Fil Rouge : 
+
+# Détection d'activité - Analyse d'une courbe de charge
 
 **_Projet fil rouge dans le cadre de la formation à Télécom Paris en lien avec l'entreprise Baalbek Management_**
 
