@@ -35,7 +35,7 @@ Il s'agit donc de concevoir des algorithmes de Machine Learning qui vont permett
 
 * Dataset Open Source de courbe de charge labellisées
 
-## Métrique d'évaluation
+## Métriques d'évaluation
 
 * Accuracy
 * Recall
