@@ -31,11 +31,15 @@ Seule cette dernière catégorie d'équipement permet de détecter une réelle a
 
 Il s'agit donc de concevoir des algorithmes de Machine Learning qui vont permettre de faire une **classification binaire** prédisant l'activité du logement, avec la contrainte de pouvoir s'adapter à différent types de logements pour lesquels on n'a pas de données labelisées (unsupervised learning)
 
+**_Exemple d'une courbe de charge labellisée_**
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Load_Curve_Example.png)
+
 ## Data
 
 * Dataset Open Source de courbe de charge labellisées
 
-## Métriques d'évaluation
+## Métrique d'évaluation
 
 * Accuracy
 * Recall
