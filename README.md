@@ -1,4 +1,4 @@
-# Projet Fil Rouge : 
+# Projet Fil Rouge (Télécom Paris)
 
 # Détection d'activité - Analyse d'une courbe de charge
 
