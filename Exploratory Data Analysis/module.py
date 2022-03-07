@@ -1,9 +1,9 @@
-from typing import List, Set, Dict, Tuple, Optional
+from typing import List, Set, Dict, Tuple, Optional, Any
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-def load_dataset(filename: str, resample_period :str=None) -> pd.DataFrame:
+def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataFrame:
     """
     Loads the dataset
     filename: the path to the file to load
@@ -21,7 +21,7 @@ def load_dataset(filename: str, resample_period :str=None) -> pd.DataFrame:
 
     return dataset
 
-def pick_random_indexes(data: pd.DataFrame, percentage: float=0.3) -> pd.DatetimeIndex:
+def pick_random_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> pd.DatetimeIndex:
     """
     Returns random indexes from the index of the DataFrame passed in parameter
     data: the DataFrame to use
@@ -39,7 +39,7 @@ def pick_random_indexes(data: pd.DataFrame, percentage: float=0.3) -> pd.Datetim
 
     return rand_indexes
 
-def split_train_test_indexes(data: pd.DataFrame, percentage: float=0.3) -> Tuple[pd.DatetimeIndex]:
+def split_train_test_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> Tuple[pd.DatetimeIndex]:
     """
     Performs a split train test on a time series by picking random full days
     data: the DataFrame to use
@@ -58,7 +58,7 @@ def split_train_test_indexes(data: pd.DataFrame, percentage: float=0.3) -> Tuple
 
     return train_indexes, test_indexes
 
-def generate_scaled_features(data: pd.DataFrame, window: str='1h', scaler=StandardScaler(), fillna_method :str='bfill') -> Tuple[pd.DataFrame, List[str]]:
+def generate_scaled_features(data: pd.DataFrame, window: Optional[str]='1h', scaler: Optional[Any]=StandardScaler(), fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
     """
     Generates features for classifications
     data: the DataFrame to use
