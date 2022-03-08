@@ -62,20 +62,21 @@ def split_train_test_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3
 
     return train_indexes, test_indexes
 
-def generate_scaled_features(data: pd.DataFrame, window: Optional[str]='1h', scaler: Optional[Any]=StandardScaler(), fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
+def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str]='1h', scaler: Optional[Any]=StandardScaler(), fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
     """
     Generates features for classifications
     data: the DataFrame to use
+    column_name: the name of the column with the power data
     window: (optional) the window of time for the rolling transformations
     scale: (optional) the scaler to use
     fillna_method: (optional) the method to use the fill na values that will occure due to the rolling transformations
     returns: a DataFrame with the old and new features and the list containing the names of the new features columns
     """
     # we prepare our features
-    data['mains_scaled'] = scaler.fit_transform(data['mains'].values.reshape(-1,1))
-    data['mean_'+window+'_scaled'] = scaler.fit_transform(data['mains'].rolling(window).mean().values.reshape(-1,1))
-    data['std_'+window+'_scaled'] = scaler.fit_transform(data['mains'].rolling(window).std().values.reshape(-1,1))
-    data['maxmin_'+window+'_scaled'] = scaler.transform(data['mains'].rolling(window).max().values.reshape(-1,1) - data['mains'].rolling(window).min().values.reshape(-1,1))
+    data['mains_scaled'] = scaler.fit_transform(data[column_name].values.reshape(-1,1))
+    data['mean_'+window+'_scaled'] = scaler.fit_transform(data[column_name].rolling(window).mean().values.reshape(-1,1))
+    data['std_'+window+'_scaled'] = scaler.fit_transform(data[column_name].rolling(window).std().values.reshape(-1,1))
+    data['maxmin_'+window+'_scaled'] = scaler.transform(data[column_name].rolling(window).max().values.reshape(-1,1) - data[column_name].rolling(window).min().values.reshape(-1,1))
     data['hour_scaled'] = scaler.fit_transform(data['hour'].values.reshape(-1,1))
     data = data.fillna(method=fillna_method)
 
