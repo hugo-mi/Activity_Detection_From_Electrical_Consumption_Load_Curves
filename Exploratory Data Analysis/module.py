@@ -21,9 +21,10 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
     if resample_period:
         dataset = dataset.resample(resample_period).nearest()
     
-    dataset['hour'] = dataset.index.hour
+    dataset['hour'] = dataset.index.hour + dataset.index.minute / 60 + dataset.index.minute / 3600
 
     return dataset
+
 
 def pick_random_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> pd.DatetimeIndex:
     """
@@ -45,7 +46,7 @@ def pick_random_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> 
 
 def split_train_test_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> Tuple[pd.DatetimeIndex]:
     """
-    Performs a split train test on a time series by picking random full days
+    Generate train and test indexes on a time series by picking random full days
     data: the DataFrame to use
     percentage: the percentage of indexes to randomly pick for the test
     returns: a tuple of DatetimeIndex with random days for the train indexes and test indexes
@@ -62,30 +63,108 @@ def split_train_test_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3
 
     return train_indexes, test_indexes
 
-def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str]='1h', scaler: Optional[Any]=StandardScaler(), fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
+def split_train_test_scale_df(data: pd.DataFrame, features_col:List[str], label_col: Optional[List[str]]=['activity'], percentage: Optional[float]=0.3, scaler: Optional[Any]=StandardScaler()) -> Tuple[np.array]:
+    """
+    Performs a split train test on a time series by picking random full days and then scales then feature columns
+    data: the DataFrame to use
+    features_col: a list containing the names of the feature columns
+    features_col: a list containing the name of the label column
+    percentage: the percentage of indexes to randomly pick for the test
+    scale: (optional) the scaler to use
+    returns: a tuple consisting of X_train, X_test, y_train, y_test
+    """
+    # tirage de jours aléatoires
+    train_indexes, test_indexes = split_train_test_indexes(data, percentage)
+
+    # on crée un DF normalisé
+    data_norm = data[features_col + label_col].copy()
+
+    # on fit le scaler et normalise le jeu de train
+    data_norm.loc[train_indexes, features_col] = scaler.fit_transform(data_norm.loc[train_indexes, features_col].values)
+    # on normalise le jeu de test
+    data_norm.loc[test_indexes, features_col] = scaler.transform(data_norm.loc[test_indexes, features_col].values)
+
+    # on génère les X/y train/test
+    X_train, X_test = data_norm.loc[train_indexes, features_col].values, data_norm.loc[test_indexes, features_col].values
+    y_train, y_test = data_norm.loc[train_indexes, 'activity'].values, data_norm.loc[test_indexes, 'activity'].values
+
+    return X_train, X_test, y_train, y_test
+
+def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str]='1h', scaler: Optional[Any]=StandardScaler(), fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str], StandardScaler]:
+    """
+    Generates scaled features for classifications
+    data: the DataFrame to use
+    column_name: the name of the column with the power data
+    window: (optional) the window of time for the rolling transformations
+    scaler: (optional) the scaler to use
+    fillna_method: (optional) the method to use the fill na values that will occure due to the rolling transformations
+    returns: a DataFrame with the old and new features, a list containing the names of the new features columns, and the fitter scaler
+    """
+    # we prepare our features
+    data['mains_scaled'] = data[column_name].values.reshape(-1,1)
+    data['mean_'+window+'_scaled'] = data[column_name].rolling(window).mean().values.reshape(-1,1)
+    data['std_'+window+'_scaled'] = data[column_name].rolling(window).std().values.reshape(-1,1)
+    data['maxmin_'+window+'_scaled'] = data[column_name].rolling(window).max().values.reshape(-1,1) - data[column_name].rolling(window).min().values.reshape(-1,1)
+    data['hour_scaled'] = data['hour'].values.reshape(-1,1)
+    data = data.fillna(method=fillna_method)
+
+    # we generate a list of the column names generated
+    features_col = ['mains_scaled', 'hour_scaled', 'std_'+window+'_scaled', 'mean_'+window+'_scaled', 'maxmin_'+window+'_scaled']
+
+    # we fit the data
+    data[features_col] = scaler.fit_transform(data[features_col].values)
+
+    return data, features_col, scaler
+
+def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str or List[str]]='1h', fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
     """
     Generates features for classifications
     data: the DataFrame to use
     column_name: the name of the column with the power data
-    window: (optional) the window of time for the rolling transformations
-    scale: (optional) the scaler to use
+    windows: (optional) the window(s) of time for the rolling transformations
     fillna_method: (optional) the method to use the fill na values that will occure due to the rolling transformations
-    returns: a DataFrame with the old and new features and the list containing the names of the new features columns
+    returns: a DataFrame with the old and new features, a list containing the names of the new features columns, and the fitter scaler
     """
     # we prepare our features
-    data['mains_scaled'] = scaler.fit_transform(data[column_name].values.reshape(-1,1))
-    data['mean_'+window+'_scaled'] = scaler.fit_transform(data[column_name].rolling(window).mean().values.reshape(-1,1))
-    data['std_'+window+'_scaled'] = scaler.fit_transform(data[column_name].rolling(window).std().values.reshape(-1,1))
-    data['maxmin_'+window+'_scaled'] = scaler.transform(data[column_name].rolling(window).max().values.reshape(-1,1) - data[column_name].rolling(window).min().values.reshape(-1,1))
-    data['hour_scaled'] = scaler.fit_transform(data['hour'].values.reshape(-1,1))
+    if not isinstance(window, list):
+        window = [window]
+
+    features_col = []
+    for w in window:
+        data['mean_'+w] = data[column_name].rolling(w).mean().values.reshape(-1,1)
+        data['std_'+w] = data[column_name].rolling(w).std().values.reshape(-1,1)
+        data['maxmin_'+w] = data[column_name].rolling(w).max().values.reshape(-1,1) - data[column_name].rolling(w).min().values.reshape(-1,1)
+
+        # we generate a list of the column names generated
+        features_col += ['std_'+w, 'mean_'+w, 'maxmin_'+w]
+    
+    # we remove the NA values
     data = data.fillna(method=fillna_method)
 
-    features_col = ['mains_scaled', 'hour_scaled', 'std_'+window+'_scaled', 'mean_'+window+'_scaled', 'maxmin_'+window+'_scaled']
 
     return data, features_col
 
+def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float]:
+    """
+    Calculates and plots the confusion matrix and prints the f_beta and accuracy scores
+    y_true: the true values
+    y_pred: the predictions
+    returns: the f_beta and accuracy scores
+    """
+    f_beta = fbeta_score(y_true, y_pred, average="macro", beta=0.5)
+    acc = accuracy_score(y_true, y_pred)
+    print(f'Score f_beta : {f_beta:.3%}')
+    print(f'Score accuracy : {acc:.3%}')
+    ax = sns.heatmap(pd.crosstab(y_true, y_pred, normalize=True), annot=True, fmt='.2%', vmin=0, vmax=1, square=True, cmap=sns.cm.rocket_r);
+    ax.set_title('Confusion Matrix')
+    ax.set_xlabel('vérité');
+    ax.set_ylabel('predictions');
+
+    return f_beta, acc
+
+
 def plot_scores_param(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, y_test: np.ndarray,
-                      estimator: Any, param_name: str, param_range: List[float], other_params: Optional[Dict[str, Any]]={}) -> Tuple[str, float, float]:
+                      estimator: Any, param_name: str, param_range: List[float], other_params: Optional[Dict[str, Any]]={}, recalculate_scores: Optional[bool]=True) -> Tuple[str, float, float]:
     """
     Performs a grid search on a model on a single parameter and displays the scores vs parameter
     X_train: the features to train the model on
@@ -96,7 +175,8 @@ def plot_scores_param(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarr
     param_name: the name of the parameter on which we perform the grid search
     param_range: the range of the parameter to perform the grid search
     other_params: (optional) additional parameters to pass to the classifier
-    returns: the parameter name, its the best value, the accuracy and the f2 score associated with the best value
+    recalculate_scores: (optional) whether or not we recalculate the score with the best parameters to plot a confusion matrix
+    returns: the parameter name, its the best value, the accuracy and the fbeta score associated with the best value
     """
     f2_score = []
     score = []
@@ -122,14 +202,11 @@ def plot_scores_param(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarr
 
     print('Meilleur fb score={:.2f} obtenu pour {}={:.2f}'.format(f2_score[best_param], param_name, param_range[best_param]))
 
-    classifier = estimator(**{param_name:param_range[best_param]})
-    classifier.fit(X_train, y_train)
-    y_pred = classifier.predict(X_test)
+    if recalculate_scores:
+        classifier = estimator(**{param_name:param_range[best_param]})
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
 
-    sns.heatmap(pd.crosstab(y_test, y_pred, normalize=True), annot=True, fmt='.1%', vmin=0, vmax=1, cmap=sns.cm.rocket_r);
-    plt.xlabel('vérité');
-    plt.ylabel('prédiction');
-    plt.title('Resultats avec {}={:.2f}'.format(param_name, param_range[best_param]));
-    plt.show();
+        plot_confusion_matrix(y_test, y_pred)
 
     return param_name, param_range[best_param], score[best_param], f2_score[best_param]
