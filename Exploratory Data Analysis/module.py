@@ -21,7 +21,7 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
     if resample_period:
         dataset = dataset.resample(resample_period).nearest()
     
-    dataset['hour'] = dataset.index.hour + dataset.index.minute / 60 + dataset.index.minute / 3600
+    dataset['hour'] = dataset.index.hour + dataset.index.minute / 60 #+ dataset.index.seconde / 3600
 
     return dataset
 
