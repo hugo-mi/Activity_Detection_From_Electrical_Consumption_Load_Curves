@@ -131,12 +131,13 @@ def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', wi
 
     features_col = []
     for w in window:
-        data['mean_'+w] = data[column_name].rolling(w).mean().values.reshape(-1,1)
-        data['std_'+w] = data[column_name].rolling(w).std().values.reshape(-1,1)
-        data['maxmin_'+w] = data[column_name].rolling(w).max().values.reshape(-1,1) - data[column_name].rolling(w).min().values.reshape(-1,1)
+        data['mean_'+w] = data[column_name].rolling(w, center=True).mean().values.reshape(-1,1)
+        data['std_'+w] = data[column_name].rolling(w, center=True).std().values.reshape(-1,1)
+        data['maxmin_'+w] = data[column_name].rolling(w, center=True).max().values.reshape(-1,1) - data[column_name].rolling(w, center=True).min().values.reshape(-1,1)
+        data['peaks_'+w] = ((data[column_name] - data['mean_'+w]) < 1e-3).astype(int).rolling(w, center=True).sum().values.reshape(-1,1)
 
         # we generate a list of the column names generated
-        features_col += ['std_'+w, 'mean_'+w, 'maxmin_'+w]
+        features_col += ['std_'+w, 'mean_'+w, 'maxmin_'+w, 'peaks_'+w]
     
     # we remove the NA values
     data = data.fillna(method=fillna_method)
