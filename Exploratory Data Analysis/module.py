@@ -1,4 +1,5 @@
 from typing import List, Set, Dict, Tuple, Optional, Any
+import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -100,12 +101,18 @@ def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mai
     fillna_method: (optional) the method to use the fill na values that will occure due to the rolling transformations
     returns: a DataFrame with the old and new features, a list containing the names of the new features columns, and the fitter scaler
     """
+    warnings.warn("This function is depreciated, use generate_features and manually scale the features instead", DeprecationWarning)
+
     # we prepare our features
     data['mains_scaled'] = data[column_name].values.reshape(-1,1)
     data['mean_'+window+'_scaled'] = data[column_name].rolling(window).mean().values.reshape(-1,1)
     data['std_'+window+'_scaled'] = data[column_name].rolling(window).std().values.reshape(-1,1)
     data['maxmin_'+window+'_scaled'] = data[column_name].rolling(window).max().values.reshape(-1,1) - data[column_name].rolling(window).min().values.reshape(-1,1)
+    data['peaks_'+window+'_scaled'] = ((data[column_name] - data['mean_'+window]) < 1e-3).astype(int).rolling(window, center=True).sum().values.reshape(-1,1)
     data['hour_scaled'] = data['hour'].values.reshape(-1,1)
+    data['weekend'] = data.index.day_of_week.isin([5, 6]).astype(int)
+
+    # we fill the na values with the chosen method
     data = data.fillna(method=fillna_method)
 
     # we generate a list of the column names generated
@@ -114,7 +121,7 @@ def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mai
     # we fit the data
     data[features_col] = scaler.fit_transform(data[features_col].values)
 
-    return data, features_col, scaler
+    return data, features_col+['weekend'], scaler
 
 def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str or List[str]]='1h', fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
     """
@@ -138,6 +145,9 @@ def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', wi
 
         # we generate a list of the column names generated
         features_col += ['std_'+w, 'mean_'+w, 'maxmin_'+w, 'peaks_'+w]
+
+    data['weekend'] = data.index.day_of_week.isin([5, 6]).astype(int)
+    features_col += ['weekend']
     
     # we remove the NA values
     data = data.fillna(method=fillna_method)
