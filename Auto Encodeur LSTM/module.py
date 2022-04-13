@@ -211,6 +211,22 @@ def plot_scores_param(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarr
 
     return param_name, param_range[best_param], score[best_param], f2_score[best_param]
 
+def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
+    """
+    Split a dataframe into train set and test set according to the split rate
+    Args:
+        - Dataframe to split into train set and test set
+        - split_rate: the rate of the test set size
+    Return:
+        - Two dataframe (Train dataframe and test dataframe)
+    """
+    size = dataframe.shape[0]
+    test_idx = size * split_rate 
+    split_idx = size - test_idx
+    split_date = dataframe.iloc[int(split_idx) - 1].name
+    train_df, test_df = dataframe.loc[dataframe.index <= split_date], dataframe.loc[dataframe.index > split_date]
+    
+    return train_df, test_df
 
 def time_in_range(start, end, x):
         """
@@ -258,8 +274,9 @@ def segmentDf(df, timeframes, use_labels=False):
         
     return l_res
 
-def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_period: int) -> list:
-    """
+"""
+def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_period: int) -> np.array:
+    
     Creation of sequences of length T and according to the overlapping period
     Args:
         - dataframe: resampled dataframe
@@ -267,7 +284,7 @@ def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_perio
         - overlap_period: Overlap the sequences of timeseries
     Returns: 
         - 3D-array [samples, sequence_length, features] (i.e sequences from the timeseries) 
-    """
+    
     dataframe = dataframe.reset_index()
     dataframe = dataframe[["mains"]]
     sequence_list = list()
@@ -278,4 +295,33 @@ def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_perio
         sequence_list.append(current_sequence)
         idx = idx - overlap_period + sequence_length
     
-    return np.array(sequence_list)
+    return sequence_list
+"""
+
+def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_period: int) -> np.array:
+    """
+    dataframe: resampled dataframe
+    sequence_length: length of the sequence
+    overlap_period: Overlap the sequences of timeseries
+    returns: Two 3D-array [samples, sequence_length, features] for the train set and the test set
+    """
+    dataframe = dataframe.reset_index()
+    X_dataframe = dataframe[["mains"]]
+    X_sequence_list = list()
+    idx = 0
+    length_df = X_dataframe.shape[0]
+    while idx + sequence_length <= length_df - 1: 
+        current_sequence =  X_dataframe.iloc[idx: idx + sequence_length].values
+        X_sequence_list.append(current_sequence)
+        idx = idx - overlap_period + sequence_length
+        
+    y_dataframe = dataframe["mains"]
+    y_sequence_list = list()
+    idx = 0
+    length_df = y_dataframe.shape[0]
+    while idx + sequence_length <= length_df - 1: 
+        current_sequence =  y_dataframe.iloc[idx + sequence_length]
+        y_sequence_list.append(current_sequence)
+        idx = idx - overlap_period + sequence_length
+    
+    return np.array(X_sequence_list), np.array(y_sequence_list)
