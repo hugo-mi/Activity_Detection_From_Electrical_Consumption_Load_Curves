@@ -26,6 +26,46 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
 
     return dataset
 
+def load_aggregate_dataset(filename: str, sub_panels:Optional[str or List[str]]='all', resample_period:Optional[str]=None) -> pd.DataFrame:
+    """
+    Loads the disaggregated dataset, aggregates the targetted sub-panels and removes the other columns
+    filename: the path to the file to load
+    sub_panels: (optional) the sub-panels to aggregate can be a list of strings containing the names of the sub-panels, or 'all' to select all panels or 'active_house1', 'active_house2', 'inactive_house1' or 'inactive_house2'
+    resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
+    returns: a DataFrame containing the dataset
+    """
+    dataset = pd.read_csv(filename)
+    dataset['datetime'] = pd.to_datetime(dataset['unix_ts'], unit='s')
+    dataset['datetime'] = dataset['datetime'] - pd.Timedelta("8 hours")
+
+    dataset = dataset.set_index(dataset['datetime'])
+    # we drop unnecessary columns
+    dataset = dataset.drop(columns=['unix_ts', 'datetime', 'ihd', 'mains'])
+    dataset = dataset.asfreq('s').interpolate('linear')
+
+    if isinstance(sub_panels, str):
+        if sub_panels == 'active_house1':
+            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub7', 'sub9', 'sub10', 'sub12', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19', 'sub21', 'sub22', 'sub23', 'sub24']
+        elif sub_panels == 'inactive_house1':
+            sub_panels = ['sub8', 'sub11', 'sub13', 'sub14', 'sub20']
+        elif sub_panels == 'active_house2':
+            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub7', 'sub9', 'sub10', 'sub12', 'sub14', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19', 'sub20', 'sub21']
+        elif sub_panels == 'inactive_house2':
+            sub_panels = ['sub8', 'sub11', 'sub13']
+        elif sub_panels == 'all':
+            sub_panels = dataset.columns
+        else:
+            raise Exception(f"Wrong value for argument sub_panels. Expected 'all', 'active_house1/2', 'inactive_house1/2' or list, got {sub_panels}")
+    
+    dataset['mains'] = dataset[sub_panels].sum(axis=1)
+    
+    dataset = dataset.drop(columns=dataset.columns[:-1])
+
+    if resample_period:
+        dataset = dataset.resample(resample_period).nearest()
+    
+
+    return dataset
 
 def pick_random_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> pd.DatetimeIndex:
     """
