@@ -291,30 +291,6 @@ def segmentDf(df, timeframes, use_labels=False):
         
     return l_res
 
-"""
-def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_period: int) -> np.array:
-    
-    Creation of sequences of length T and according to the overlapping period
-    Args:
-        - dataframe: resampled dataframe
-        - sequence_length: length of the sequence
-        - overlap_period: Overlap the sequences of timeseries
-    Returns: 
-        - 3D-array [samples, sequence_length, features] (i.e sequences from the timeseries) 
-    
-    dataframe = dataframe.reset_index()
-    dataframe = dataframe[["mains"]]
-    sequence_list = list()
-    idx = 0
-    length_df = dataframe.shape[0]
-    while idx + sequence_length <= length_df: 
-        current_sequence =  dataframe[idx: idx + sequence_length]
-        sequence_list.append(current_sequence)
-        idx = idx - overlap_period + sequence_length
-    
-    return sequence_list
-"""
-
 def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_period: int) -> np.array:
     """
     dataframe: resampled dataframe
@@ -332,12 +308,12 @@ def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_perio
         X_sequence_list.append(current_sequence)
         idx = idx - overlap_period + sequence_length
         
-    y_dataframe = dataframe["mains"]
+    y_dataframe = dataframe[["datetime", "activity"]]
     y_sequence_list = list()
     idx = 0
     length_df = y_dataframe.shape[0]
     while idx + sequence_length <= length_df - 1: 
-        current_sequence =  y_dataframe.iloc[idx + sequence_length]
+        current_sequence =  y_dataframe.iloc[idx: idx + sequence_length].values
         y_sequence_list.append(current_sequence)
         idx = idx - overlap_period + sequence_length
     
