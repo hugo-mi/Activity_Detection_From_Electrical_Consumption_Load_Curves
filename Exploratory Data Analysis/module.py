@@ -1,4 +1,5 @@
 from typing import List, Set, Dict, Tuple, Optional, Any
+import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,6 +26,46 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
 
     return dataset
 
+def load_aggregate_dataset(filename: str, sub_panels:Optional[str or List[str]]='all', resample_period:Optional[str]=None) -> pd.DataFrame:
+    """
+    Loads the disaggregated dataset, aggregates the targetted sub-panels and removes the other columns
+    filename: the path to the file to load
+    sub_panels: (optional) the sub-panels to aggregate can be a list of strings containing the names of the sub-panels, or 'all' to select all panels or 'active_house1', 'active_house2', 'inactive_house1' or 'inactive_house2'
+    resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
+    returns: a DataFrame containing the dataset
+    """
+    dataset = pd.read_csv(filename)
+    dataset['datetime'] = pd.to_datetime(dataset['unix_ts'], unit='s')
+    dataset['datetime'] = dataset['datetime'] - pd.Timedelta("8 hours")
+
+    dataset = dataset.set_index(dataset['datetime'])
+    # we drop unnecessary columns
+    dataset = dataset.drop(columns=['unix_ts', 'datetime', 'ihd', 'mains'])
+    dataset = dataset.asfreq('s').interpolate('linear')
+
+    if isinstance(sub_panels, str):
+        if sub_panels == 'active_house1':
+            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub7', 'sub9', 'sub10', 'sub12', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19', 'sub21', 'sub22', 'sub23', 'sub24']
+        elif sub_panels == 'inactive_house1':
+            sub_panels = ['sub8', 'sub11', 'sub13', 'sub14', 'sub20']
+        elif sub_panels == 'active_house2':
+            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub7', 'sub9', 'sub10', 'sub12', 'sub14', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19', 'sub20', 'sub21']
+        elif sub_panels == 'inactive_house2':
+            sub_panels = ['sub8', 'sub11', 'sub13']
+        elif sub_panels == 'all':
+            sub_panels = dataset.columns
+        else:
+            raise Exception(f"Wrong value for argument sub_panels. Expected 'all', 'active_house1/2', 'inactive_house1/2' or list, got {sub_panels}")
+    
+    dataset['mains'] = dataset[sub_panels].sum(axis=1)
+    
+    dataset = dataset.drop(columns=dataset.columns[:-1])
+
+    if resample_period:
+        dataset = dataset.resample(resample_period).nearest()
+    
+
+    return dataset
 
 def pick_random_indexes(data: pd.DataFrame, percentage: Optional[float]=0.3) -> pd.DatetimeIndex:
     """
@@ -100,12 +141,18 @@ def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mai
     fillna_method: (optional) the method to use the fill na values that will occure due to the rolling transformations
     returns: a DataFrame with the old and new features, a list containing the names of the new features columns, and the fitter scaler
     """
+    warnings.warn("This function is depreciated, use generate_features and manually scale the features instead", DeprecationWarning)
+
     # we prepare our features
     data['mains_scaled'] = data[column_name].values.reshape(-1,1)
     data['mean_'+window+'_scaled'] = data[column_name].rolling(window).mean().values.reshape(-1,1)
     data['std_'+window+'_scaled'] = data[column_name].rolling(window).std().values.reshape(-1,1)
     data['maxmin_'+window+'_scaled'] = data[column_name].rolling(window).max().values.reshape(-1,1) - data[column_name].rolling(window).min().values.reshape(-1,1)
+    data['peaks_'+window+'_scaled'] = ((data[column_name] - data['mean_'+window]) < 1e-3).astype(int).rolling(window, center=True).sum().values.reshape(-1,1)
     data['hour_scaled'] = data['hour'].values.reshape(-1,1)
+    data['weekend'] = data.index.day_of_week.isin([5, 6]).astype(int)
+
+    # we fill the na values with the chosen method
     data = data.fillna(method=fillna_method)
 
     # we generate a list of the column names generated
@@ -114,7 +161,7 @@ def generate_scaled_features(data: pd.DataFrame, column_name: Optional[str]='mai
     # we fit the data
     data[features_col] = scaler.fit_transform(data[features_col].values)
 
-    return data, features_col, scaler
+    return data, features_col+['weekend'], scaler
 
 def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', window: Optional[str or List[str]]='1h', fillna_method :Optional[str]='bfill') -> Tuple[pd.DataFrame, List[str]]:
     """
@@ -138,6 +185,9 @@ def generate_features(data: pd.DataFrame, column_name: Optional[str]='mains', wi
 
         # we generate a list of the column names generated
         features_col += ['std_'+w, 'mean_'+w, 'maxmin_'+w, 'peaks_'+w]
+
+    data['weekend'] = data.index.day_of_week.isin([5, 6]).astype(int)
+    features_col += ['weekend']
     
     # we remove the NA values
     data = data.fillna(method=fillna_method)
