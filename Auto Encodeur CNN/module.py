@@ -6,6 +6,23 @@ import seaborn as sns
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import fbeta_score, accuracy_score
+import datetime
+import math
+
+def convertToSequenceParameters(timestep=datetime.timedelta(minutes=1), duration_time=datetime.timedelta(minutes=60), overlap_perc=0.5):
+    """
+    Args :
+        - timestep : datetime.delta objects, la période de resample du dataset
+        - duration_time : datetime.delta objects, la durée d'observation d'une séquence
+        - overlap_perc : float in [0, 1]
+    Returns :
+        - SEQUENCE_LENGTH : int longueur de séquence correspondante à la duration_time selon le timestep
+        - overlap_period : int
+    """
+    SEQUENCE_LENGTH = math.ceil(duration_time/timestep)
+    overlap_period = int(SEQUENCE_LENGTH*overlap_perc)
+    return SEQUENCE_LENGTH, overlap_period
+
 
 def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataFrame:
     """
