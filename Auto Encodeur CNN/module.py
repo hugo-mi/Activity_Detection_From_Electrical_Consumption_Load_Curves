@@ -1,4 +1,7 @@
 from typing import List, Set, Dict, Tuple, Optional, Any
+import os
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,14 +27,39 @@ def convertToSequenceParameters(timestep=datetime.timedelta(minutes=1), duration
     return SEQUENCE_LENGTH, overlap_period
 
 
-def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataFrame:
+# def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataFrame:
+#     """
+#     Loads the dataset
+#     filename: the path to the file to load
+#     resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
+#     returns: a DataFrame containing the dataset
+#     """
+#     dataset = pd.read_csv(filename, index_col='datetime').interpolate('linear')
+#     dataset.index = pd.to_datetime(dataset.index)
+#     dataset = dataset.asfreq('s')
+
+#     if resample_period:
+#         dataset = dataset.resample(resample_period).nearest()
+    
+#     dataset['hour'] = dataset.index.hour + dataset.index.minute / 60 #+ dataset.index.seconde / 3600
+
+#     return dataset
+
+def load_dataset(resample_period :Optional[str]=None) -> pd.DataFrame:
     """
     Loads the dataset
-    filename: the path to the file to load
-    resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
-    returns: a DataFrame containing the dataset
+    Args:
+        resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
+    returns: 
+        a DataFrame containing the dataset
     """
-    dataset = pd.read_csv(filename, index_col='datetime').interpolate('linear')
+    os.getcwd()
+    path = Path(os.getcwd())
+    # Path('data/house1_power_blk2_labels.csv')
+    path = path.parent.parent.absolute() / 'data' / "house1_power_blk2_labels"/ "house1_power_blk2_labels.csv"
+
+    
+    dataset = pd.read_csv(path, index_col='datetime').interpolate('linear')
     dataset.index = pd.to_datetime(dataset.index)
     dataset = dataset.asfreq('s')
 
