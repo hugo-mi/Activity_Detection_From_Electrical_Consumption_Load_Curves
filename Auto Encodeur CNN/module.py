@@ -335,8 +335,12 @@ def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_perio
         current_sequence =  X_dataframe.iloc[idx: idx + sequence_length].values
         X_sequence_list.append(current_sequence)
         idx = idx - overlap_period + sequence_length
-        
+    
+    # generate list of index
+    idx_list = list(np.arange(0, len(dataframe)))
+    
     y_dataframe = dataframe[["datetime", "activity"]]
+    y_dataframe["index"] = idx_list
     y_sequence_list = list()
     idx = 0
     length_df = y_dataframe.shape[0]
