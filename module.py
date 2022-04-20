@@ -38,7 +38,7 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
     os.getcwd()
     path = Path(os.getcwd())
     # Path('data/house1_power_blk2_labels.csv')
-    path = path.parent.parent.absolute() / 'Data' / filename
+    path = path.parent.absolute() / 'Data' / filename
 
     
     dataset = pd.read_csv(path, index_col='datetime').interpolate('linear')
