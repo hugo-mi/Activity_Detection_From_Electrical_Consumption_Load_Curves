@@ -37,7 +37,7 @@ def load_dataset(filename: str, resample_period :Optional[str]=None) -> pd.DataF
     """
     os.getcwd()
     path = Path(os.getcwd())
-    # Path('data/house1_power_blk2_labels.csv')
+    # Path('Data/house1_power_blk2.zip')
     path = path.parent.absolute() / 'Data' / filename
 
     
@@ -60,7 +60,13 @@ def load_aggregate_dataset(filename: str, sub_panels:Optional[str or List[str]]=
     resample_period: (optional) the reasmple period, if None the default period of 1 second will be used
     returns: a DataFrame containing the dataset
     """
-    dataset = pd.read_csv(filename)
+
+    os.getcwd()
+    path = Path(os.getcwd())
+    # Path('Data/house1_power_blk2.zip')
+    path = path.parent.absolute() / 'Data' / filename
+
+    dataset = pd.read_csv(path)
     dataset['datetime'] = pd.to_datetime(dataset['unix_ts'], unit='s')
     dataset['datetime'] = dataset['datetime'] - pd.Timedelta("8 hours")
 
