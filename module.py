@@ -309,7 +309,7 @@ def plot_activity_hist(data: pd.Series, density: Optional[bool]=True, **kwargs: 
     else:
         norm=1
 
-    pd.DataFrame(data[data > 0].index.hour.value_counts() / norm).reset_index(drop=False).sort_values(by='index').plot.bar(x='index', y='datetime', **kwargs)
+    pd.DataFrame(data[data > 0].index.hour.value_counts().reindex(range(24)).fillna(0) / norm).reset_index(drop=False).sort_values(by='index').plot.bar(x='index', y='datetime', **kwargs)
 
 
 def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
