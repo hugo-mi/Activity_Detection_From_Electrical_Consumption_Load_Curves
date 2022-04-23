@@ -294,6 +294,24 @@ def plot_scores_param(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarr
 
     return param_name, param_range[best_param], score[best_param], f2_score[best_param]
 
+def plot_activity_hist(data: pd.Series, density: Optional[bool]=True, **kwargs: Any):
+    """
+    Plot the histogram of activity per hour of the day
+    Args:
+        - data: Pandas time Series containing the activity (data['activity'])
+        - density (optional): whether to normalize the histogram or not (default = True_)
+        - kwargs (optional): arguments passed to pyplot 
+    Return:
+        - None
+    """
+    if density:
+        norm=data.sum()
+    else:
+        norm=1
+
+    pd.DataFrame(data[data > 0].index.hour.value_counts() / norm).reset_index(drop=False).sort_values(by='index').plot.bar(x='index', y='datetime', **kwargs)
+
+
 def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
     """
     Split a dataframe into train set and test set according to the split rate
