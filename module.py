@@ -313,6 +313,58 @@ def plot_activity_hist(data: pd.Series, density: Optional[bool]=True, **kwargs: 
     pd.DataFrame(data[data > 0].index.hour.value_counts().reindex(range(24)).fillna(0) / norm).reset_index(drop=False).sort_values(by='index').plot.bar(x='index', y='datetime', **kwargs)
 
 
+def activity_periods(data_activity: pd.Series)->pd.Series:
+    """
+    Extracts the activity time periods
+    Args:
+       data_activity: the time series from which we want to extract the activity time periods
+    returns: a pandas series with a line for each activity time period as a pandas Intervalle
+    """
+    data_activity.iloc[-1] = 0
+    data_activity.iloc[-1] = 0
+    
+           # on définit un nouveau dataframe avec diff = 1 si début d'activité, -1 si fin
+    return pd.DataFrame(data_activity.diff(1)[data_activity.diff(1)!=0].dropna().replace(-1, 'end').replace(1, 'begin')) \
+           .reset_index().set_axis(['datetime', 'activity'], axis=1, inplace=False)\
+           .pivot(values='datetime', columns='activity').fillna(method='ffill').iloc[1::2, :].reset_index(drop=True).apply(lambda x: pd.Interval(x['begin'], x['end'], closed='neither'), axis=1) # on fait un pivot, ffil et on supprime une ligne sur deux
+
+def detect_overlaps(data_act_true: pd.Series, data_act_pred: pd.Series)-> pd.Series:
+    """
+    Defines for each line of data_act_true how many lines of data_act_pred it overlaps
+    Args:
+        data_act_true: true activity periods
+        data_act_pred: predicted activity periods
+    return: A pandas series with the for each data_act_true period how many pperiod of data_act_pred they overlap
+    """
+    return data_act_true.apply(lambda x: np.array([x.overlaps(data_act_pred.iloc[i]) for i in range(data_act_pred.shape[0])]).sum())
+
+def score_overlap(activity_true: pd.Series, activity_pred: pd.Series, resample_period:Optional[str]='30min')->Tuple[int, int, int]:
+    """
+    Determines the number of true activity periods, the number of activity periods that are detected (TP) and the number of activity periods detected when there was no true activity (FP)
+    Args:
+        activity_true: time series that contains the true activity labels
+        activity_pred: time series that contains the predicted activity labels
+        resample_period (optional): the time period to use to resample both time series
+    returns: a tuple containg the number of true activity periods, the number of true activity periods that are detected (TP) and the number of activity periods detected when there was no true activity (FP)
+    """
+    # we start by smoothing the data
+    activity_true = (activity_true.rolling(resample_period).mean()>0).astype(int).copy()
+    activity_pred = (activity_pred.rolling(resample_period).mean()>0).astype(int).copy()
+
+    # we get the activity perdiods for each activity series
+    activity_per_true = activity_periods(activity_true)
+    activity_per_pred = activity_periods(activity_pred)
+
+    # we get the count of true activity periods
+    T = activity_per_true.shape[0]
+
+    # we estimate the true positives and false positives
+    TP = (detect_overlaps(activity_per_true, activity_per_pred) > 0).sum()
+    FP = (detect_overlaps(activity_per_pred, activity_per_true) == 0).sum()
+
+    return T, TP, FP
+
+
 def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
     """
     Split a dataframe into train set and test set according to the split rate
