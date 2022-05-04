@@ -338,15 +338,16 @@ def detect_overlaps(data_act_true: pd.Series, data_act_pred: pd.Series)-> pd.Ser
     """
     return data_act_true.apply(lambda x: np.array([x.overlaps(data_act_pred.iloc[i]) for i in range(data_act_pred.shape[0])]).sum())
 
-def score_overlap(activity_true: pd.Series, activity_pred: pd.Series, resample_period:Optional[str]='30min')->Tuple[int, int, int]:
+def score_overlap(activity_true, activity_pred, resample_period='30min'):
     """
-    Determines the number of true activity periods, the number of activity periods that are detected (TP) and the number of activity periods detected when there was no true activity (FP)
+    Determines the number of activity periods that are detected (TP) and the number of activity periods detected when there was no true activity (FP)
     Args:
         activity_true: time series that contains the true activity labels
         activity_pred: time series that contains the predicted activity labels
         resample_period (optional): the time period to use to resample both time series
-    returns: a tuple containg the number of true activity periods, the number of true activity periods that are detected (TP) and the number of activity periods detected when there was no true activity (FP)
+    returns: the percentage of true activity periods that are detected (TP) and the percentage of activity periods predicted when there was no true activity (FP)
     """
+
     # we start by smoothing the data
     activity_true = (activity_true.rolling(resample_period).mean()>0).astype(int).copy()
     activity_pred = (activity_pred.rolling(resample_period).mean()>0).astype(int).copy()
@@ -357,13 +358,13 @@ def score_overlap(activity_true: pd.Series, activity_pred: pd.Series, resample_p
 
     # we get the count of true activity periods
     T = activity_per_true.shape[0]
+    F = activity_per_true.shape[0]
 
     # we estimate the true positives and false positives
     TP = (detect_overlaps(activity_per_true, activity_per_pred) > 0).sum()
     FP = (detect_overlaps(activity_per_pred, activity_per_true) == 0).sum()
 
-    return T, TP, FP
-
+    return TP/T, FP/F
 
 def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
     """
