@@ -320,7 +320,7 @@ def activity_periods(data_activity: pd.Series)->pd.Series:
        data_activity: the time series from which we want to extract the activity time periods
     returns: a pandas series with a line for each activity time period as a pandas Intervalle
     """
-    data_activity.iloc[-1] = 0
+    data_activity.iloc[0] = 0
     data_activity.iloc[-1] = 0
     
            # on définit un nouveau dataframe avec diff = 1 si début d'activité, -1 si fin
