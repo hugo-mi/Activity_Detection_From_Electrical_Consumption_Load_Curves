@@ -358,7 +358,7 @@ def score_overlap(activity_true, activity_pred, resample_period='30min'):
 
     # we get the count of true activity periods
     T = activity_per_true.shape[0]
-    F = activity_per_true.shape[0]
+    F = activity_per_pred.shape[0]
 
     # we estimate the true positives and false positives
     TP = (detect_overlaps(activity_per_true, activity_per_pred) > 0).sum()
