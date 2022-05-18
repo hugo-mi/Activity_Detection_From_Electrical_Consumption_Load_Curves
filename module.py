@@ -78,7 +78,7 @@ def load_aggregate_dataset(filename: str, sub_panels:Optional[str or List[str]]=
 
     if isinstance(sub_panels, str):
         if sub_panels == 'active_house1':# [ 1, 2, 3, 4, 5, 6, 9, 10, 17, 18, 19]
-            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub9', 'sub10', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19'] # 'sub12',  'sub21', 'sub22', 'sub24'
+            sub_panels = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub9', 'sub10', 'sub15', 'sub16', 'sub17', 'sub18', 'sub19', 'sub21', 'sub22', 'sub24'] # 'sub12',  'sub21', 'sub22', 'sub24'
         elif sub_panels == 'inactive_house1':
             sub_panels = ['sub7', 'sub8', 'sub11', 'sub12', 'sub13', 'sub14', 'sub20', 'sub23']
         elif sub_panels == 'active_house2':
