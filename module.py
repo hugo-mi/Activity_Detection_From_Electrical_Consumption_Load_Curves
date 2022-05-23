@@ -460,3 +460,27 @@ def create_sequence(dataframe: pd.DataFrame, sequence_length: int, overlap_perio
         idx = idx - overlap_period + sequence_length
     
     return np.array(X_sequence_list), np.array(y_sequence_list)
+
+
+def detect_stages(dataframe, col, col_datetime):
+    """
+    Transforme une dataframe de time series en une dataframe des périodes délimitées par la colonne binaire col
+    Args :
+        -df_house : dataframe avec index datetime et une colonne col binaire
+        -col : colonne binaire utilisée pour séparer les périodes
+        -col_datetime : colonne contenant les timestamps
+    Return :
+        - df_stages : dataframe avec pour chaque ligne une période : (col, début, fin, durée en minutes, durée en secondes)
+    """
+    df_house=dataframe.copy()
+    df_house["next"] = df_house[col].shift(1)
+    df_house["next"]=df_house["next"].fillna(method="bfill").astype(int)
+    df_house["switch"] = np.where(df_house["next"]==df_house[col], 0, 1)
+    df_house["stage"]=df_house["switch"].cumsum()
+    df_house=df_house.reset_index().groupby(by='stage').agg({col : ['mean'], col_datetime: ['min', 'max']})
+    df_house.columns = ['_'.join(col) for col in df_house.columns.values]
+    df_house=df_house.rename(columns={col+"_mean": col})
+    df_house[col]=df_house[col].astype(int)
+    df_house["duration_min"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[m]")
+    df_house["duration_sec"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[s]")
+    return df_house
