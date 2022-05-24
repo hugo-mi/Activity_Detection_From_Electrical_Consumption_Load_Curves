@@ -87,12 +87,31 @@ def plot_postprocessing_anomalies(data_prediction_post_process, test_df):
     
     idx_anomalies = np.where(anomalies_method_1)
     
-    df_anomalies = data_prediction_post_process.iloc[idx_anomalies]
+    os.getcwd()
+    path = Path(os.getcwd())
+    path = path.parent.absolute() / 'reports' / 'anomaly_report_after_postprocessing.txt'
+    
+    with open(path, 'w') as f:
+        f.write('###################################')
+        f.write('\n')
+        f.write("ANOMALY SEQUENCES (After postprocessing)")
+        f.write('\n')
+        f.write("###################################")
+        f.write('\n\n\n\n')
+            
+        f.write("Number of anomaly anomaly data points (After postprocessing): " + str(len(idx_anomalies[0])))
+            
+        f.write('\n\n\n')
+        f.write("Indices of anomaly data points (After postprocessing):\n\n")
+        f.write(str(idx_anomalies))
+
     test_df_value = test_df["mains"]
+    df_anomalies = test_df_value.iloc[idx_anomalies]
+    
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=test_df_value.index, y=test_df_value.values, name='Normal'))
-    fig.add_trace(go.Scatter(x=df_anomalies["Timestamp"], y=df_anomalies["method_prediction_1"], mode='markers', name='Anomaly = Activity (Predicted)'))
+    fig.add_trace(go.Scatter(x=df_anomalies.index, y=df_anomalies.values, mode='markers', name='Anomaly = Activity (Predicted)'))
     fig.update_layout(showlegend=True, title='Detected anomalies with method prediction 1')
     
     os.getcwd()

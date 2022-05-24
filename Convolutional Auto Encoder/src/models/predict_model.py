@@ -140,7 +140,7 @@ def detect_anomaly_sequence(test_mae_loss, threshold, SEQUENCE_LENGTH, y_test):
     
     os.getcwd()
     path = Path(os.getcwd())
-    path = path.parent.absolute() / 'reports' / 'anomaly_sequences.txt'
+    path = path.parent.absolute() / 'reports' / 'anomaly_report_before_postprocessing.txt'
     
     with open(path, 'w') as f:
         f.write('###################################')
@@ -165,7 +165,7 @@ def detect_anomaly_sequence(test_mae_loss, threshold, SEQUENCE_LENGTH, y_test):
         f.write("###################################")
         f.write('\n\n\n\n')
         
-        f.write("Number of anomaly samples: " + str(len(data_anomalies_idx)))
+        f.write("Number of anomaly data points: " + str(len(data_anomalies_idx)))
         
         f.write('\n\n\n')
         f.write("Indices of anomaly samples:\n\n")
