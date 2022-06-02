@@ -484,3 +484,174 @@ def detect_stages(dataframe, col, col_datetime):
     df_house["duration_min"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[m]")
     df_house["duration_sec"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[s]")
     return df_house
+
+
+
+
+
+### ============ EVALUATION ============ 
+
+
+def get_TPTNFPFN(df_merged, col_pred, col_gt="activity"):
+    """
+    Computes TP, TN FP FN for an input dataframe with prediction and ground_truth columns 
+    Args :
+        -
+    Return :
+        - 
+    """
+    df = df_merged.copy()
+    df["TP"] = np.where((df[col_pred]==1)&(df[col_gt]==1), 1, 0)
+    df["TN"] = np.where((df[col_pred]==0)&(df[col_gt]==0), 1, 0)
+    df["FP"] = np.where((df[col_pred]==1)&(df[col_gt]==0), 1, 0)
+    df["FN"] = np.where((df[col_pred]==0)&(df[col_gt]==1), 1, 0)
+
+    return df
+
+
+def get_IoU(df_period, col_period_min, col_period_max, ts_min, ts_max, col_bin,  activity):
+    """
+    Computes IoU between the period [ts_min, ts_max] and the corresponding periods of df_gt for activity/inactivity specified by activity 
+    Args :
+        -
+    Return :
+        - 
+    """
+    df = df_period[(df_period[col_period_max]>=ts_min)&(df_period[col_period_min]<=ts_max)].copy()
+    df=df.loc[df[col_bin]==activity, :]
+    
+    # Compute Intersection I
+    df["datetime_min_cut"] = ts_min
+    df["datetime_min_cut"] = np.maximum(df[col_period_min], df["datetime_min_cut"])
+    df["datetime_max_cut"] = ts_max
+    df["datetime_max_cut"] = np.minimum(df[col_period_max], df["datetime_max_cut"])
+    I = np.sum(df["datetime_max_cut"] - df["datetime_min_cut"]).seconds
+    
+    
+    # Compute Union U
+    U = np.sum(df["duration_sec"]) + (ts_max-ts_min).seconds - I # nécessité d'avoir une colonne "duration_sec" dans les dataframes utilisées
+
+    IoU = I/U
+
+    return df, U, I, IoU
+
+def get_activity_stages(pred_period, col_method):
+    return pred_period[pred_period[col_method]==1].copy()
+
+def broken_barh_x(df, col_bin, col_ts_min, col_ts_max):
+    s1 = df.loc[df[col_bin]==1, col_ts_min]
+    s0 = df.loc[df[col_bin]==0, col_ts_min]
+
+    s1_length = df.loc[df[col_bin]==1, col_ts_max] - df.loc[df[col_bin]==1, col_ts_min]
+    s0_length = df.loc[df[col_bin]==0, col_ts_max] - df.loc[df[col_bin]==0, col_ts_min]
+
+    times1 = list(zip(s1,s1_length))
+    times0 = list(zip(s0,s0_length))
+    
+    return times1, times0
+
+def eval(pred, df_gt, display_plots=True):
+    """
+    Evaluer les prédictions en terme de mAP (mean avergae precision) et mAR (mean average recall)
+    Args :
+        - pred : dataframe de 2 colonnes : (timestamp, activity_prediction)
+        - gt : dataframe de 2 colonnes : (timestamp, true_activity)
+        - plot_recap : wether or not to display the summary of predicted and true activity
+        - plot_metrics : wether or not to display the metrics plots
+    Returns :
+        - list of (IoU threshold, mAP, mAR)
+        (- side effect : plots)
+    """
+
+    # resample_period = pred.iloc[1,0] - pred.iloc[0,0] # non utilisé
+    
+    colActivity_df_gt = df_gt.columns[1]
+    colActivity_pred = pred.columns[1]
+
+    df_gt_period = detect_stages(df_gt, colActivity_df_gt, df_gt.columns[0])
+    pred_period = detect_stages(pred, colActivity_pred, pred.columns[0])
+    
+    df_merged = pred.set_index(pred.columns[0]).join(df_gt.set_index(df_gt.columns[0]), how='outer').fillna(method="ffill")
+    df_merged = get_TPTNFPFN(df_merged, col_pred=colActivity_pred, col_gt=colActivity_df_gt)#.loc[:, ["TP"	,"TN",	"FP",	"FN"]]
+    df_merged = df_merged.reset_index().rename(columns={"index":'datetime'})
+
+    # restriction aux périodes ground_truth d'activité
+    df_gt_period_activity = get_activity_stages(df_gt_period, colActivity_df_gt)
+    # restriction aux périodes prédites d'activité
+    pred_period_activity = get_activity_stages(pred_period, colActivity_pred)
+    
+    # # ajout de la colonne de metrique IoU à la dataframe des predictions
+    l = []
+    for ts_min, ts_max in zip(pred_period_activity.iloc[:,1], pred_period_activity.iloc[:,2]): # col 1 for timestamp min, col 2 for timestamp max
+        l.append((get_IoU(df_gt_period, df_gt_period.columns[1], df_gt_period.columns[2]
+                            , ts_min, ts_max, colActivity_df_gt,  activity=1))[3])
+    pred_period_activity["IoU"] = np.array(l)
+
+     # ajout de la colonne de metrique IoU à la dataframe ground_truth
+    l = []
+    for ts_min, ts_max in zip(df_gt_period_activity.iloc[:,1], df_gt_period_activity.iloc[:,2]):
+        l.append((get_IoU(pred_period,pred_period.columns[1], pred_period.columns[2]
+                        , ts_min, ts_max, colActivity_pred, 1)[3]))
+    df_gt_period_activity["IoU"] = np.array(l)
+    df_gt_period_activity.head()
+
+    
+    # === Calcul des métriques ===
+
+    tau_range = np.linspace(0,1,101)
+    
+    # calcul du mAP
+    N = len(pred_period_activity)
+    map = []
+    for tau in tau_range:
+        map.append(len(pred_period_activity[pred_period_activity["IoU"]>tau])/N)
+
+    # calcul du mAR
+    N = len(df_gt_period_activity)
+    mar = []
+    for tau in tau_range:
+        mar.append(len(df_gt_period_activity[df_gt_period_activity["IoU"]>tau])/N)
+
+
+     #=================== = Plots = ====================
+
+    if display_plots:
+        fig, ax = plt.subplots(2, 2, gridspec_kw={'width_ratios': [4, 1]})
+        fig.set_size_inches(20, 6)
+    
+        # Plot summary 0
+        col_timestamp_min_pred_period = pred_period.columns[1]
+        col_timestamp_max_pred_period = pred_period.columns[2]
+        times1_pred, times0_pred = broken_barh_x(pred_period, colActivity_pred, col_timestamp_min_pred_period, col_timestamp_max_pred_period)
+        ax[0,0].broken_barh(times1_pred, (0,1), label = "Activity")
+        ax[0,0].broken_barh(times0_pred, (0,1), facecolors='lightgray')
+
+        col_timestamp_min_dfgt_period = df_gt_period.columns[1]
+        col_timestamp_max_dfgt_period = df_gt_period.columns[2]
+        times1_gt, times0_gt = broken_barh_x(df_gt_period, colActivity_df_gt, col_timestamp_min_dfgt_period, col_timestamp_max_dfgt_period)
+        ax[0,0].broken_barh(times1_gt, (1.05,1))
+        ax[0,0].broken_barh(times0_gt, (1.05,1), facecolors='lightgray')
+
+        ax[0,0].set_yticks([0.5, 1.5], labels=['pred', 'gt'])
+        ax[0,0].legend()
+        ax[0,0].set_title("Pred and Ground Truth")
+
+        # Plot summary 1
+        for case, color in zip(["TP", "TN", "FN","FP"], ["green", "lightgreen", "#F9F691","red"]):
+            df_tp = detect_stages(df_merged, case, df_merged.columns[0])
+            times, _ = broken_barh_x(df_tp, case, df_tp.columns[1], df_tp.columns[2])
+            ax[1,0].broken_barh(times, (0,1), label = case, facecolors=color)
+
+        ax[1,0].legend()
+        ax[1,0].set_title("Pred vs ground_truth - brut instantané")
+        plt.tight_layout()
+
+        # Plot curves
+        ax[0,1].plot(map, label = "mAP : rate of correct activity period")
+        ax[0,1].plot(mar, c='orange', label="mAR : rate of detected activity period")
+        ax[0,1].set_title("mAP and mAR curves for IoU metric")
+        ax[0,1].set_ylabel("Rate")
+        ax[0,1].set_xlabel("IoU threshold tau (%)")
+        ax[0,1].legend()
+        
+    return (tau_range, map, mar)
