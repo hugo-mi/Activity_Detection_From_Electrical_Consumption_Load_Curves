@@ -17,12 +17,13 @@ def train_embeddings(model, X_train, params=None):
     if params is None:
         params = {'lr': 0.001, 'epochs': 20, 'batch_size': 1024}
 
-    early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='loss', mode='auto', restore_best_weights=True)
+    early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='val_loss', mode='auto', restore_best_weights=True)
 
     history =  model.fit(X_train,
                          X_train,
                          epochs=params['epochs'],
                          batch_size=params['batch_size'],
+                         validation_split=0.1,
                          callbacks=[early_stop])
     
     embeddings = model.layers[1].get_weights()
@@ -42,7 +43,7 @@ def train_classifier(model, embeddings, X_train, y_train, params=None):
     if params is None:
         params = {'lr': 0.001, 'epochs': 15, 'batch_size': 1024}
     
-    early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='loss', mode='auto', restore_best_weights=True)
+    early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='val_loss', mode='auto', restore_best_weights=True)
     
     model.layers[1].set_weights(embeddings)
     model.layers[1].trainable = True
@@ -51,6 +52,7 @@ def train_classifier(model, embeddings, X_train, y_train, params=None):
                          y_train,
                          epochs=params['epochs'],
                          batch_size=params['batch_size'],
+                         validation_split=0.1,
                          callbacks=[early_stop])
     
     history_df = pd.DataFrame(history.history)

@@ -21,6 +21,7 @@ from utils import plot_confusion_matrix, plot_activity_hist
 def plot_train_val_loss(history):
 
     plt.plot(history.history["loss"], label="Training Loss")
+    plt.plot(history.history["val_loss"], label="Validation Loss")
     plt.legend()
     plt.title("Training & Validation Loss Evolution\n")
     
@@ -46,8 +47,10 @@ def plot_activity_histogram(df_predict, test_df):
     
 def plot_activity_distibrution(df_predict):
     
-    sns.histplot(data=df_predict, x="activity").set(title='Activity prediction distribution (Activity VS Non Activity)')
-    
+
+    _, ax = plt.subplots()
+    sns.histplot(data=df_predict, x="activity", ax=ax).set(title='Activity prediction distribution (Activity VS Non Activity)')
+
     os.getcwd()
     path = Path(os.getcwd())
     path = path.parent.absolute() / 'reports' / 'figures' / 'activity_predicted_distribution.png'
@@ -56,6 +59,7 @@ def plot_activity_distibrution(df_predict):
     
 def confusion_matrix(test_df, df_predict):
 
+    plt.figure()
     minlen = min(test_df['activity'].shape[0], df_predict['activity'].shape[0])
     plot_confusion_matrix(test_df.iloc[:minlen, :].loc[:, 'activity'], df_predict.iloc[:minlen, :].loc[:, 'activity'])
     

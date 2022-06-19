@@ -31,6 +31,10 @@ from eval_model import plot_train_val_loss, plot_activity_histogram, plot_activi
 sys.path.insert(0,'../src/models/')
 from predict_model import X_train_predict, X_test_predict, plot_train_mse_loss, plot_test_mse_loss, get_df_predict, detect_activity_sequence, y_test_predict
 
+# --- Import functions from eval_model.py ---
+sys.path.insert(0,'../src/models/')
+from save_model import save_model, load_model
+
 
 # --- Import functions from postprocessing.py ---
 sys.path.insert(0,'..')
@@ -58,43 +62,74 @@ train_df, test_df, X_train, y_train, X_test, y_test = data_preprocessing(timefra
                                                                          ,sequence_length = SEQUENCE_LENGTH
                                                                          ,overlap_period = OVERLAP_PERIOD
                                                                          ,resample_period = TIME_STEP)
-                                                                                                                         
 
-# --- Build Model ---
-print("\n\nBUILDING MODELS...")
-model_emb = model_embeddings(X_train)
-model_c = model_classifier(X_train)
+### Below lines are commented since we will load an existing model
+## Uncomment them to build a new model
+# # --- Build Model ---
+# print("\n\nBUILDING MODELS...")
+# model_emb = model_embeddings(X_train)
+# model_c = model_classifier(X_train)
 
-# --- Train Model ---
-print("\n\nTRAINING MODEL FOR EMBEDDINGS...")
-history_emb, embeddings = train_embeddings(model_emb, X_train)
+# # --- Train Model ---
+# print("\n\nTRAINING MODEL FOR EMBEDDINGS...")
+# history_emb, embeddings = train_embeddings(model_emb, X_train)
 
-print("\n\nTRAINING MODEL FOR CLASSIFICATION...")
-history_c = train_classifier(model_c, embeddings, X_train, y_train)
+# print("\n\nTRAINING MODEL FOR CLASSIFICATION...")
+# history_c = train_classifier(model_c, embeddings, X_train, y_train)
 
-# --- Evaluation Model ---
-print("\n\nPLOTING TRAIN AND VALIDATION LOSS...")
-plot_train_val_loss(history_c)
+# # --- Save Model ---
+# print("\n\nSAVING MODEL...")
+# save_model(model_c)
+
+# # --- Evaluation Model ---
+# print("\n\nPLOTING TRAIN AND VALIDATION LOSS...")
+# plot_train_val_loss(history_c)
+
+# ###### X_train prediction ######
+# # --- Prediction Model on X_train ---
+# print("\n\nMAKING PREDICTION FOR X_train...")
+# X_train_pred = X_train_predict(model_emb, X_train)
+
+# # --- Plot train mse loss ---
+# print("\n\nPLOTING TRAIN MSE LOSS...")
+# plot_train_mse_loss(X_train_pred, X_train)
 
 
-###### X_train prediction ######
-# --- Prediction Model on X_train ---
-print("\n\nMAKING PREDICTION FOR X_train...")
-X_train_pred = X_train_predict(model_emb, X_train)
+# ###### X_test prediction ######
+# # --- Prediction Model on X_test ---
+# print("\n\nMAKING PREDICTION FOR X_test...")
+# X_test_pred = X_test_predict(model_emb, X_test)
 
-# --- Plot train mse loss ---
-print("\n\nPLOTING TRAIN MSE LOSS...")
-plot_train_mse_loss(X_train_pred, X_train)
+# # --- Plot test mse loss ---
+# print("\n\nPLOTING TEST MSE LOSS...")
+# plot_test_mse_loss(X_test_pred, X_test)
+
+# # --- Evaluation Model ---
+# print("\n\nPLOTING TRAIN AND VALIDATION LOSS...")
+# plot_train_val_loss(history_c)
+
+# ###### X_train prediction ######
+# # --- Prediction Model on X_train ---
+# print("\n\nMAKING PREDICTION FOR X_train...")
+# X_train_pred = X_train_predict(model_emb, X_train)
+
+# # --- Plot train mse loss ---
+# print("\n\nPLOTING TRAIN MSE LOSS...")
+# plot_train_mse_loss(X_train_pred, X_train)
 
 
-###### X_test prediction ######
-# --- Prediction Model on X_test ---
-print("\n\nMAKING PREDICTION FOR X_test...")
-X_test_pred = X_test_predict(model_emb, X_test)
+# ###### X_test prediction ######
+# # --- Prediction Model on X_test ---
+# print("\n\nMAKING PREDICTION FOR X_test...")
+# X_test_pred = X_test_predict(model_emb, X_test)
 
-# --- Plot test mse loss ---
-print("\n\nPLOTING TEST MSE LOSS...")
-plot_test_mse_loss(X_test_pred, X_test)
+# # --- Plot test mse loss ---
+# print("\n\nPLOTING TEST MSE LOSS...")
+# plot_test_mse_loss(X_test_pred, X_test)
+
+# --- Load Model ---
+print("\n\nLOADING MODEL...")
+model_c = load_model()
 
 # --- Make predictions ---
 print("\n\nMAKING PREDICTION FOR y_test...")
