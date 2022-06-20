@@ -25,7 +25,7 @@ from train_model import train
 
 # --- Import functions from eval_model.py ---
 sys.path.insert(0,'../src/models/')
-from eval_model import plot_train_val_loss, plot_reconstructed_base_load_curve, plot_activity_histogram, plot_activity_distibrution, confusion_matrix
+from eval_model import plot_train_val_loss, plot_reconstructed_base_load_curve, plot_activity_histogram, plot_activity_distibrution, confusion_matrix, evaluate
 
 # --- Import functions from predict_model.py ---
 sys.path.insert(0,'../src/models/')
@@ -38,7 +38,7 @@ from postprocessing import data_postprocessing, plot_postprocessing_anomalies
 
 # --- Visualize Load Curve Dataset ---
 print("LOAD DATASET...\n\n")
-df_load_curve = visualize_load_curve_dataset("house1_power_blk2_labels.zip","60min")
+df_load_curve = visualize_load_curve_dataset("house1_power_blk2_labels.zip")
 
 
 # --- Visualize Load Curve ---
@@ -52,6 +52,7 @@ DURATION_TIME = datetime.timedelta(minutes=60) # duration of a sequence
 OVERLAP_PERIOD_PERCENT = 0.8 # 0.5 <=> 50% overlapping
 TIMEFRAMES = [(datetime.time(0,0,0), datetime.time(3,0,0))] # timeframes we consider as unactive
 STRATEGY = "off_peak_time" # device, off_peak_time, label 
+METHOD = "method_prediction_1" # method to choose for aggregating sequences
 
 print("CONVERTING GLOBAL USER PARAMETERS...\n")
 SEQUENCE_LENGTH, OVERLAP_PERIOD = convertToSequenceParameters(TIME_STEP, DURATION_TIME, OVERLAP_PERIOD_PERCENT)
@@ -174,7 +175,7 @@ confusion_matrix(test_df, df_predict)
 
 # --- Post Processing --- #
 print("\n\nPOSTPROCESSING...")
-data_postprocessing(y_test, SEQUENCE_LENGTH, sequences_anomalies_idx)
+data_postprocessing(y_test, SEQUENCE_LENGTH, sequences_anomalies_idx, True)
 
 # --- Load data prediction post processing --- #
 print("\n\nLOADING DATA PREDICTION POSTPROCESSING...")
@@ -183,3 +184,12 @@ data_prediction_post_process = read_pickle_dataset("data_prediction.pkl")
 # --- Plot detected anoamlies after post processing --- #
 print("\n\nPLOTING DETECTED ANOMALIES (AFTER POST PROCESSING)...")
 plot_postprocessing_anomalies(data_prediction_post_process, test_df)
+
+# --- PLot direct and IoU threshold
+print("\n\nPLOTING EVALUATION PLOT (DIRECT AND IoU THRESHOLD)...")
+
+
+y_pred = data_prediction_post_process[["Timestamp", METHOD]]
+y_true = df_load_curve[(df_load_curve.index>=y_pred["Timestamp"].min())&(df_load_curve.index<=y_pred["Timestamp"].max())].reset_index()[["datetime", "activity"]]
+
+IoU_thresholds, MAP, MAR = evaluate(y_pred, y_true, display_plots=True)

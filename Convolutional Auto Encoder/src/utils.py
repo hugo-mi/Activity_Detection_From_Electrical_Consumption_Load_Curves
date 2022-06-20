@@ -236,3 +236,99 @@ def read_pickle_dataset(pickle_filename):
     path = path.parent.absolute() / 'src' / 'data' / pickle_filename
     df_picke = pd.read_pickle(path)
     return df_picke
+
+
+
+
+
+
+
+##### EVAL FUNCTION #####
+
+def detect_stages(dataframe, col, col_datetime):
+    """
+    Transforme une dataframe de time series en une dataframe des périodes délimitées par la colonne binaire col
+    Args :
+        -df_house : dataframe avec index datetime et une colonne col binaire
+        -col : colonne binaire utilisée pour séparer les périodes
+        -col_datetime : colonne contenant les timestamps
+    Return :
+        - df_stages : dataframe avec pour chaque ligne une période : (col, début, fin, durée en minutes, durée en secondes)
+    """
+    df_house=dataframe.copy()
+    df_house["next"] = df_house[col].shift(1)
+    df_house["next"]=df_house["next"].fillna(method="bfill").astype(int)
+    df_house["switch"] = np.where(df_house["next"]==df_house[col], 0, 1)
+    df_house["stage"]=df_house["switch"].cumsum()
+    df_house=df_house.reset_index().groupby(by='stage').agg({col : ['mean'], col_datetime: ['min', 'max']})
+    df_house.columns = ['_'.join(col) for col in df_house.columns.values]
+    df_house=df_house.rename(columns={col+"_mean": col})
+    df_house[col]=df_house[col].astype(int)
+    df_house["duration_min"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[m]")
+    df_house["duration_sec"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[s]")
+    return df_house
+
+
+
+
+
+### ============ EVALUATION ============ 
+
+
+def get_TPTNFPFN(df_merged, col_pred, col_gt="activity"):
+    """
+    Computes TP, TN FP FN for an input dataframe with prediction and ground_truth columns 
+    Args :
+        -
+    Return :
+        - 
+    """
+    df = df_merged.copy()
+    df["TP"] = np.where((df[col_pred]==1)&(df[col_gt]==1), 1, 0)
+    df["TN"] = np.where((df[col_pred]==0)&(df[col_gt]==0), 1, 0)
+    df["FP"] = np.where((df[col_pred]==1)&(df[col_gt]==0), 1, 0)
+    df["FN"] = np.where((df[col_pred]==0)&(df[col_gt]==1), 1, 0)
+
+    return df
+
+
+def get_IoU(df_period, col_period_min, col_period_max, ts_min, ts_max, col_bin,  activity):
+    """
+    Computes IoU between the period [ts_min, ts_max] and the corresponding periods of df_gt for activity/inactivity specified by activity 
+    Args :
+        -
+    Return :
+        - 
+    """
+    df = df_period[(df_period[col_period_max]>=ts_min)&(df_period[col_period_min]<=ts_max)].copy()
+    df=df.loc[df[col_bin]==activity, :]
+    
+    # Compute Intersection I
+    df["datetime_min_cut"] = ts_min
+    df["datetime_min_cut"] = np.maximum(df[col_period_min], df["datetime_min_cut"])
+    df["datetime_max_cut"] = ts_max
+    df["datetime_max_cut"] = np.minimum(df[col_period_max], df["datetime_max_cut"])
+    I = np.sum(df["datetime_max_cut"] - df["datetime_min_cut"]).seconds
+    
+    
+    # Compute Union U
+    U = np.sum(df["duration_sec"]) + (ts_max-ts_min).seconds - I # nécessité d'avoir une colonne "duration_sec" dans les dataframes utilisées
+
+    IoU = I/U
+
+    return df, U, I, IoU
+
+def get_activity_stages(pred_period, col_method):
+    return pred_period[pred_period[col_method]==1].copy()
+
+def broken_barh_x(df, col_bin, col_ts_min, col_ts_max):
+    s1 = df.loc[df[col_bin]==1, col_ts_min]
+    s0 = df.loc[df[col_bin]==0, col_ts_min]
+
+    s1_length = df.loc[df[col_bin]==1, col_ts_max] - df.loc[df[col_bin]==1, col_ts_min]
+    s0_length = df.loc[df[col_bin]==0, col_ts_max] - df.loc[df[col_bin]==0, col_ts_min]
+
+    times1 = list(zip(s1,s1_length))
+    times0 = list(zip(s0,s0_length))
+    
+    return times1, times0

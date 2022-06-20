@@ -15,10 +15,10 @@ from utils import load_dataset
 
 ## Visualize Load Curve Dataset
 
-def visualize_load_curve_dataset(filename: str, resample_period :Optional[str]="60min"):
+def visualize_load_curve_dataset(filename: str, resample_period :Optional[str]=None):
     dataset_resampled = load_dataset(filename, resample_period)
-    dataset_resampled = dataset_resampled["mains"]
-    df_mains_resampled = pd.DataFrame(dataset_resampled)
+    dataset_resampled_bis = dataset_resampled["mains"]
+    df_mains_resampled = pd.DataFrame(dataset_resampled_bis)
     
     os.getcwd()
     path = Path(os.getcwd())
@@ -29,7 +29,8 @@ def visualize_load_curve_dataset(filename: str, resample_period :Optional[str]="
     
     print("Load Curve Dataset Resampled each", resample_period)
     print(df_mains_resampled.head(30))
- 
+    
+    return dataset_resampled
 
 ## Visualize Load Curve Resampled
 
