@@ -25,7 +25,7 @@ def visualize_load_curve_dataset(filename: str, resample_period :Optional[str]=N
     path = path.parent.absolute() / 'reports' / 'load_curve_dataset.txt'
 
     
-    df_mains_resampled.to_csv(path, sep=' ')
+    #df_mains_resampled.to_csv(path, sep=' ') # don't export because file to heavy
     
     print("Load Curve Dataset Resampled each", resample_period)
     print(df_mains_resampled.head(30))
