@@ -18,7 +18,8 @@ def data_preprocessing(timeframes: list
                   ,resample_period :Optional[str]=None
                   ,use_labels :Optional[bool]=False
                   ,strategy :Optional[str] = "off_peak_time" 
-                  ,split_rate :Optional[float]=0.2) -> np.array:
+                  ,split_rate :Optional[float]=0.2
+                  , split_method=None) -> np.array:
     """
     1/ Loads the dataset and resample timeseries
     2/ Split a dataframe into train set and test set according to the split rate
@@ -59,7 +60,7 @@ def data_preprocessing(timeframes: list
     print("")
     print("")
     # split dataframe into train set and test set
-    train_df, test_df = train_test_split_dataset(df_resampled)
+    train_df, test_df, mask_test = train_test_split_dataset(df_resampled, method=split_method)
     
     # Standardize Data
     print("#### Rescaling Data... ####")
@@ -75,7 +76,23 @@ def data_preprocessing(timeframes: list
     print("#### Creating Test Sequence... ####")
     print("")
     print("")
-    X_sequences_test, y_sequences_test = create_sequence(test_df, sequence_length, overlap_period)
+    if split_method=="random_days":
+        list_df_test = []
+        mask = ((mask_test) != (np.roll(mask_test, 1)))[mask_test]
+        for df in np.split(test_df, np.where(mask)[0]):
+            list_df_test.append(df)
+        # init 3D-array [samples, sequence_length, features]
+        first_df_test = list_df_test[0]
+        X_sequences_test, y_sequences_test = create_sequence(first_df_test, sequence_length, overlap_period)
+        list_df_test.pop(0) # delete the first element of the list of train dataframes
+
+        # Creation of sequences of length T and according to the overlapping period
+        for df_test_ in list_df_test:
+            next_X_sequences_test, next_y_sequences_test = create_sequence(df_test_, sequence_length, overlap_period)
+            X_sequences_test = np.append(X_sequences_test, next_X_sequences_test, axis = 0)
+            y_sequences_test = np.append(y_sequences_test, next_y_sequences_test, axis = 0)
+    else:
+        X_sequences_test, y_sequences_test = create_sequence(test_df, sequence_length, overlap_period)
     
     if strategy == "device":
         print("Strategy chosen : ", strategy)
@@ -123,7 +140,13 @@ def data_preprocessing(timeframes: list
         print("")
         # --- TRAIN SEQUENCES ----
         # Construction of the dataset according to peak and off-peak hours 
-        list_df_train = segmentDf(train_df, timeframes = timeframes)
+        if split_method=="random_days":
+            list_df_train = []
+            mask = ((~mask_test) != (np.roll(~mask_test, 1)))[~mask_test]
+            for df in np.split(train_df, np.where(mask)[0]):
+                list_df_train.append(segmentDf(df, timeframes = timeframes))
+        else:
+            list_df_train = segmentDf(train_df, timeframes = timeframes)
 
         # init 3D-array [samples, sequence_length, features]
         first_df_train = list_df_train[0]

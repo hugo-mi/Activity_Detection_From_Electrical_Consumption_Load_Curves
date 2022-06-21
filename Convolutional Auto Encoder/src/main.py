@@ -65,7 +65,8 @@ train_df, test_df, X_train, y_train, X_test, y_test = data_preprocessing(timefra
                                                                          ,sequence_length = SEQUENCE_LENGTH
                                                                          ,overlap_period = OVERLAP_PERIOD
                                                                          ,resample_period = TIME_STEP
-                                                                         ,strategy = STRATEGY)
+                                                                         ,strategy = STRATEGY
+                                                                         ,split_method=None)
 
 print("PRINTING PREPROCESSING REPORT...\n")
 report_classification = visualize_report_preprocessing(X_train, y_train, X_test, y_test

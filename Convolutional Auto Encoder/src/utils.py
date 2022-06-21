@@ -135,22 +135,27 @@ def plot_activity_hist(data: pd.Series, density: Optional[bool]=True, **kwargs: 
     pd.DataFrame(data[data > 0].index.hour.value_counts().reindex(range(24)).fillna(0) / norm).reset_index(drop=False).sort_values(by='index').plot.bar(x='index', y='datetime', **kwargs)
     
 
-def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2)-> pd.DataFrame:
+def train_test_split_dataset(dataframe: pd.DataFrame, split_rate :Optional[float]=0.2, method=None)-> pd.DataFrame:
     """
     Split a dataframe into train set and test set according to the split rate
     Args:
-        - Dataframe to split into train set and test set
+        - Dataframe to split into train set and test set, dataframe must have a datetime index
         - split_rate: the rate of the test set size
+        - method : None for basic train test split based on a threhsold date, random_days for selecting random days (19h->18h59)
     Return:
         - Two dataframe (Train dataframe and test dataframe)
     """
-    size = dataframe.shape[0]
-    test_idx = size * split_rate 
-    split_idx = size - test_idx
-    split_date = dataframe.iloc[int(split_idx) - 1].name
-    train_df, test_df = dataframe.loc[dataframe.index <= split_date], dataframe.loc[dataframe.index > split_date]
-    
-    return train_df, test_df
+    if method==None:
+        size = dataframe.shape[0]
+        test_idx = size * split_rate 
+        split_idx = size - test_idx
+        split_date = dataframe.iloc[int(split_idx) - 1].name
+        mask_test = dataframe.index > split_date
+    elif method=="random_days":
+        test_days = np.random.choice(pd.unique(dataframe.index.date), int(len(pd.unique(dataframe.index.date))*split_rate))
+        mask_test = np.isin((dataframe.index + datetime.timedelta(hours=-19)).date, test_days)
+    train_df, test_df = dataframe.loc[~mask_test], dataframe.loc[mask_test]
+    return train_df, test_df, mask_test
 
 def time_in_range(start, end, x):
         """
