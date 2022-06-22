@@ -4,4 +4,4 @@ THRESHOLD
 
 
 
-Reconstruction error treshold: 0.3290443581482937
+Reconstruction error treshold: 0.277083001248155
