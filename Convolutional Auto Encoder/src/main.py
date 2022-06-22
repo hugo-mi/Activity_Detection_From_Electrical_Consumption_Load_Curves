@@ -53,6 +53,7 @@ OVERLAP_PERIOD_PERCENT = 0.8 # 0.5 <=> 50% overlapping
 TIMEFRAMES = [(datetime.time(0,0,0), datetime.time(3,0,0))] # timeframes we consider as unactive
 STRATEGY = "off_peak_time" # device, off_peak_time, label 
 METHOD = "method_prediction_1" # method to choose for aggregating sequences
+SPLIT_METHOD = "random_days" # method for train test split, None or "random_days"
 
 print("CONVERTING GLOBAL USER PARAMETERS...\n")
 SEQUENCE_LENGTH, OVERLAP_PERIOD = convertToSequenceParameters(TIME_STEP, DURATION_TIME, OVERLAP_PERIOD_PERCENT)
@@ -66,7 +67,7 @@ train_df, test_df, X_train, y_train, X_test, y_test = data_preprocessing(timefra
                                                                          ,overlap_period = OVERLAP_PERIOD
                                                                          ,resample_period = TIME_STEP
                                                                          ,strategy = STRATEGY
-                                                                         ,split_method=None)
+                                                                         ,split_method=SPLIT_METHOD)
 
 print("PRINTING PREPROCESSING REPORT...\n")
 report_classification = visualize_report_preprocessing(X_train, y_train, X_test, y_test

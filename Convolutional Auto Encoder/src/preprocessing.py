@@ -60,7 +60,7 @@ def data_preprocessing(timeframes: list
     print("")
     print("")
     # split dataframe into train set and test set
-    train_df, test_df, mask_test = train_test_split_dataset(df_resampled, method=split_method)
+    train_df, test_df, mask_test = train_test_split_dataset(df_resampled, method=split_method, split_rate=split_rate)
     
     # Standardize Data
     print("#### Rescaling Data... ####")
@@ -79,7 +79,10 @@ def data_preprocessing(timeframes: list
     if split_method=="random_days":
         list_df_test = []
         mask = ((mask_test) != (np.roll(mask_test, 1)))[mask_test]
-        for df in np.split(test_df, np.where(mask)[0]):
+        a = np.where(mask)[0]
+        if 0 in a and len(a>1):
+            a = a[1:]
+        for df in np.split(test_df, a):
             list_df_test.append(df)
         # init 3D-array [samples, sequence_length, features]
         first_df_test = list_df_test[0]
@@ -144,7 +147,7 @@ def data_preprocessing(timeframes: list
             list_df_train = []
             mask = ((~mask_test) != (np.roll(~mask_test, 1)))[~mask_test]
             for df in np.split(train_df, np.where(mask)[0]):
-                list_df_train.append(segmentDf(df, timeframes = timeframes))
+                list_df_train.extend(segmentDf(df, timeframes = timeframes))
         else:
             list_df_train = segmentDf(train_df, timeframes = timeframes)
 
