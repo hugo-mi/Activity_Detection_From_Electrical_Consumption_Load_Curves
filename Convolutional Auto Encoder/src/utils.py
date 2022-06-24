@@ -194,12 +194,10 @@ def segmentDf(df, timeframes, use_labels=False):
 
         df_house.loc[:,"timeframe_id"] = df_house.loc[:,'beginning_of_toi'].cumsum()
         
-        print(df_house.head(2))# debug
         groupby_object = df_house[df_house["timeframe_of_interest"]].groupby(["timeframe_id"])
         
         
         for key in list(groupby_object.groups.keys()):
-            #print(key)
             l_res.append(df_house.loc[df_house[df_house["timeframe_of_interest"]].groupby(["timeframe_id"]).groups[key]])
         
     return l_res
