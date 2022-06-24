@@ -486,11 +486,7 @@ def detect_stages(dataframe, col, col_datetime):
     return df_house
 
 
-
-
-
 ### ============ EVALUATION ============ 
-
 
 def get_TPTNFPFN(df_merged, col_pred, col_gt="activity"):
     """
@@ -507,7 +503,6 @@ def get_TPTNFPFN(df_merged, col_pred, col_gt="activity"):
     df["FN"] = np.where((df[col_pred]==0)&(df[col_gt]==1), 1, 0)
 
     return df
-
 
 def get_IoU(df_period, col_period_min, col_period_max, ts_min, ts_max, col_bin,  activity):
     """
@@ -550,7 +545,7 @@ def broken_barh_x(df, col_bin, col_ts_min, col_ts_max):
     
     return times1, times0
 
-def eval(pred, df_gt, display_plots=True):
+def eval_metric(pred, df_gt, display_plots=True):
     """
     Evaluer les prédictions en terme de mAP (mean avergae precision) et mAR (mean average recall)
     Args :
@@ -632,7 +627,8 @@ def eval(pred, df_gt, display_plots=True):
         ax[0,0].broken_barh(times1_gt, (1.05,1))
         ax[0,0].broken_barh(times0_gt, (1.05,1), facecolors='lightgray')
 
-        ax[0,0].set_yticks([0.5, 1.5], labels=['pred', 'gt'])
+        ax[0,0].set_yticks([0.5, 1.5])
+        ax[0,0].set_yticklabels(('pred', 'gt'))
         ax[0,0].legend()
         ax[0,0].set_title("Pred and Ground Truth")
 
