@@ -194,12 +194,10 @@ def segmentDf(df, timeframes, use_labels=False):
 
         df_house.loc[:,"timeframe_id"] = df_house.loc[:,'beginning_of_toi'].cumsum()
         
-        print(df_house.head(2))# debug
         groupby_object = df_house[df_house["timeframe_of_interest"]].groupby(["timeframe_id"])
         
         
         for key in list(groupby_object.groups.keys()):
-            #print(key)
             l_res.append(df_house.loc[df_house[df_house["timeframe_of_interest"]].groupby(["timeframe_id"]).groups[key]])
         
     return l_res
@@ -262,9 +260,10 @@ def detect_stages(dataframe, col, col_datetime):
         - df_stages : dataframe avec pour chaque ligne une période : (col, début, fin, durée en minutes, durée en secondes)
     """
     df_house=dataframe.copy()
+    timestep = df_house[col_datetime].iloc[1] - df_house[col_datetime].iloc[0]
     df_house["next"] = df_house[col].shift(1)
     df_house["next"]=df_house["next"].fillna(method="bfill").astype(int)
-    df_house["switch"] = np.where(df_house["next"]==df_house[col], 0, 1)
+    df_house["switch"] = np.where(df_house["next"]==df_house[col], 0, 1) + ((df_house[col_datetime] - df_house[col_datetime].shift(1)).fillna(method="bfill") != timestep).astype(int)
     df_house["stage"]=df_house["switch"].cumsum()
     df_house=df_house.reset_index().groupby(by='stage').agg({col : ['mean'], col_datetime: ['min', 'max']})
     df_house.columns = ['_'.join(col) for col in df_house.columns.values]
@@ -273,9 +272,6 @@ def detect_stages(dataframe, col, col_datetime):
     df_house["duration_min"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[m]")
     df_house["duration_sec"]=(df_house[col_datetime+"_max"]-df_house[col_datetime+"_min"]).astype("timedelta64[s]")
     return df_house
-
-
-
 
 
 ### ============ EVALUATION ============ 

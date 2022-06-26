@@ -193,5 +193,6 @@ print("\n\nPLOTING EVALUATION PLOT (DIRECT AND IoU THRESHOLD)...")
 
 y_pred = data_prediction_post_process[["Timestamp", METHOD]]
 y_true = df_load_curve[(df_load_curve.index>=y_pred["Timestamp"].min())&(df_load_curve.index<=y_pred["Timestamp"].max())].reset_index()[["datetime", "activity"]]
+y_true = y_true[y_true["datetime"].isin(y_pred["Timestamp"])] #restriction de y_true aux timestamps contenus dans y_pred
 
 IoU_thresholds, MAP, MAR = evaluate(y_pred, y_true, display_plots=True)
