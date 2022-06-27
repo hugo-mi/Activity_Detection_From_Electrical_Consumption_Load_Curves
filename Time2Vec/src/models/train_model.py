@@ -15,7 +15,7 @@ from keras.callbacks import EarlyStopping
 
 def train_embeddings(model, X_train, params=None):
     if params is None:
-        params = {'lr': 0.001, 'epochs': 20, 'batch_size': 1024}
+        params = {'lr': 0.001, 'epochs': 20, 'batch_size': 128}
 
     early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='val_loss', mode='auto', restore_best_weights=True)
 
@@ -41,12 +41,12 @@ def train_embeddings(model, X_train, params=None):
 
 def train_classifier(model, embeddings, X_train, y_train, params=None):
     if params is None:
-        params = {'lr': 0.001, 'epochs': 15, 'batch_size': 1024}
+        params = {'lr': 0.001, 'epochs': 15, 'batch_size': 128}
     
     early_stop = EarlyStopping(patience=3, verbose=0, min_delta=0.0001, monitor='val_loss', mode='auto', restore_best_weights=True)
     
     model.layers[1].set_weights(embeddings)
-    model.layers[1].trainable = True
+    model.layers[1].trainable = False
 
     history =  model.fit(X_train,
                          y_train,
