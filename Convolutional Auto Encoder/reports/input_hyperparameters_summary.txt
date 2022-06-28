@@ -1,0 +1,9 @@
+======== INPUT HYPERPARAMETERS SUMMARY ========
+
+DATASET : house1_power_blk2_labels.zipTIME_STEP : 0:01:30
+DURATION_TIME : 1:00:00
+OVERLAP_PERIOD_PERCENT : 0.8
+TIMEFRAMES : [(datetime.time(0, 0), datetime.time(3, 0))]
+STRATEGY : off_peak_time
+METHOD : method_prediction_1
+SPLIT_METHOD : random_days

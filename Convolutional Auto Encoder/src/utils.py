@@ -193,7 +193,6 @@ def segmentDf(df, timeframes, use_labels=False):
         df_house.loc[:,"beginning_of_toi"] = np.where(df_house.loc[:,"timeframe_of_interest"]==df_house.loc[:,"next_toi"], 0, 1)
 
         df_house.loc[:,"timeframe_id"] = df_house.loc[:,'beginning_of_toi'].cumsum()
-        
         groupby_object = df_house[df_house["timeframe_of_interest"]].groupby(["timeframe_id"])
         
         

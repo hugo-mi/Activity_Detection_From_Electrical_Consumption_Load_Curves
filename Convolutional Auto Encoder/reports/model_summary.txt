@@ -1,24 +1,20 @@
-Model: "sequential"
+Model: "sequential_4"
 _________________________________________________________________
- Layer (type)                Output Shape              Param #   
+Layer (type)                 Output Shape              Param #   
 =================================================================
- conv1d (Conv1D)             (None, 20, 32)            256       
-                                                                 
- dropout (Dropout)           (None, 20, 32)            0         
-                                                                 
- conv1d_1 (Conv1D)           (None, 10, 16)            3600      
-                                                                 
- conv1d_transpose (Conv1DTra  (None, 20, 16)           1808      
- nspose)                                                         
-                                                                 
- dropout_1 (Dropout)         (None, 20, 16)            0         
-                                                                 
- conv1d_transpose_1 (Conv1DT  (None, 40, 32)           3616      
- ranspose)                                                       
-                                                                 
- conv1d_transpose_2 (Conv1DT  (None, 40, 1)            129       
- ranspose)                                                       
-                                                                 
+conv1d_8 (Conv1D)            (None, 20, 32)            256       
+_________________________________________________________________
+dropout_8 (Dropout)          (None, 20, 32)            0         
+_________________________________________________________________
+conv1d_9 (Conv1D)            (None, 10, 16)            3600      
+_________________________________________________________________
+conv1d_transpose_12 (Conv1DT (None, 20, 16)            1808      
+_________________________________________________________________
+dropout_9 (Dropout)          (None, 20, 16)            0         
+_________________________________________________________________
+conv1d_transpose_13 (Conv1DT (None, 40, 32)            3616      
+_________________________________________________________________
+conv1d_transpose_14 (Conv1DT (None, 40, 1)             129       
 =================================================================
 Total params: 9,409
 Trainable params: 9,409

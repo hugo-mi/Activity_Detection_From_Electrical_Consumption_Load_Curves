@@ -1,6 +1,8 @@
 # ---- utils libs ----
 import datetime
 import sys
+import os
+from pathlib import Path
 
 
 # --- Import functions from utils.py ---
@@ -36,17 +38,8 @@ sys.path.insert(0,'..')
 from postprocessing import data_postprocessing, plot_postprocessing_anomalies
 
 
-# --- Visualize Load Curve Dataset ---
-print("LOAD DATASET...\n\n")
-df_load_curve = visualize_load_curve_dataset("house1_power_blk2_labels.zip")
-
-
-# --- Visualize Load Curve ---
-print("\n\nPLOTING LOAD CURVE RESAMPLED...\n\n")
-load_curve_resampled = visualize_load_curve_resampled("house1_power_blk2_labels.zip","60min")
-
-
 # --- Define global variable ---
+DATASET = "house1_power_blk2_labels.zip"
 TIME_STEP = datetime.timedelta(minutes=1, seconds=30) # duration of a step in the resample dataset, originally 1 second
 DURATION_TIME = datetime.timedelta(minutes=60) # duration of a sequence
 OVERLAP_PERIOD_PERCENT = 0.8 # 0.5 <=> 50% overlapping
@@ -55,10 +48,53 @@ STRATEGY = "off_peak_time" # device, off_peak_time, label
 METHOD = "method_prediction_1" # method to choose for aggregating sequences
 SPLIT_METHOD = "random_days" # method for train test split, None or "random_days"
 
-print("CONVERTING GLOBAL USER PARAMETERS...\n")
-SEQUENCE_LENGTH, OVERLAP_PERIOD = convertToSequenceParameters(TIME_STEP, DURATION_TIME, OVERLAP_PERIOD_PERCENT)
-print("\t\tValeur choisie \t Equivalent sequence\nTimestep : \t {}\nDuration :\t {} \t -->  {} \nOverlap :\t {} \t\t -->  {}".format(TIME_STEP, DURATION_TIME, SEQUENCE_LENGTH, OVERLAP_PERIOD_PERCENT, OVERLAP_PERIOD))
+print("======== INPUT HYPERPARAMETERS SUMMARY ========")
+print("DATASET : ", DATASET)
+print("TIME_STEP : ", TIME_STEP)
+print("DURATION_TIME : ", DURATION_TIME)
+print("OVERLAP_PERIOD_PERCENT : ", OVERLAP_PERIOD_PERCENT)
+print("TIMEFRAMES : ", TIMEFRAMES)
+print("STRATEGY : ", STRATEGY)
+print("METHOD : ", METHOD)
+print("SPLIT_METHOD : ", SPLIT_METHOD)
 
+# --- Save Hyperparameters in a text file ---
+os.getcwd()
+path = Path(os.getcwd())
+path = path.parent.absolute() / 'reports' / 'input_hyperparameters_summary.txt'
+    
+with open(path, 'w') as f:
+    f.write("======== INPUT HYPERPARAMETERS SUMMARY ========")
+    f.write('\n\n')
+    f.write("DATASET : " + str(DATASET))
+    f.write("TIME_STEP : " + str(TIME_STEP))
+    f.write('\n')
+    f.write("DURATION_TIME : " + str(DURATION_TIME))
+    f.write('\n')
+    f.write("OVERLAP_PERIOD_PERCENT : " + str(OVERLAP_PERIOD_PERCENT))
+    f.write('\n')
+    f.write("TIMEFRAMES : " + str(TIMEFRAMES))
+    f.write('\n')
+    f.write("STRATEGY : " + str(STRATEGY))
+    f.write('\n')
+    f.write("METHOD : " + str(METHOD))
+    f.write('\n')
+    f.write("SPLIT_METHOD : " + str(SPLIT_METHOD))
+
+# --- Converting global variable for the model ---
+print("\n\nCONVERTING GLOBAL USER PARAMETERS...")
+SEQUENCE_LENGTH, OVERLAP_PERIOD = convertToSequenceParameters(TIME_STEP, DURATION_TIME, OVERLAP_PERIOD_PERCENT)
+print("\t\tChoosen value \t Equivalent sequence\nTimestep : \t {}\nDuration :\t {} \t -->  {} \nOverlap :\t {} \t\t -->  {}".format(TIME_STEP, DURATION_TIME, SEQUENCE_LENGTH, OVERLAP_PERIOD_PERCENT, OVERLAP_PERIOD))
+
+
+# --- Load Curve Dataset ---
+print("\n\nLOAD DATASET...\n\n")
+df_load_curve = visualize_load_curve_dataset(DATASET)
+
+
+# --- Visualize Load Curve ---
+print("\n\nPLOTING LOAD CURVE RESAMPLED...\n\n")
+load_curve_resampled = visualize_load_curve_resampled(DATASET,"60min")
 
 # --- Pre Processing ---
 print("STARTING PREPROCESSING...\n")
@@ -78,13 +114,13 @@ report_classification = visualize_report_preprocessing(X_train, y_train, X_test,
                                                        ,STRATEGY)
                                                                                                                          
 
-print("PLOTING TRAIN LOAD CURVE (base load curve)(" + STRATEGY + ")...")
+print("\nPLOTING TRAIN LOAD CURVE (base load curve)(" + STRATEGY + ")...")
 visualize_train_load_curve(train_df, STRATEGY)
 
-print("PLOTING TEST LOAD CURVE (" + STRATEGY + ")...")
+print("\nPLOTING TEST LOAD CURVE (" + STRATEGY + ")...")
 visualize_test_load_curve(test_df, STRATEGY)
 
-print("PLOTING TRAIN TEST LOAD CURVE (" + STRATEGY + ")...")
+print("\nPLOTING TRAIN TEST LOAD CURVE (" + STRATEGY + ")...")
 visualize_test_train_load_curve(train_df, test_df, STRATEGY)
 
 # --- Build Model ---
