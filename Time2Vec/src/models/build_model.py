@@ -81,14 +81,14 @@ def T2V_NN_C(param, dim):
     x = Dense(1, activation='sigmoid')(x)
     
     m = Model(inp, x)
-    m.compile(loss='bce', optimizer='adam')
+    m.compile(loss='mse', optimizer='adam')
     
     return m
 
 
 def model_embeddings(X_train, params=None):
     if params is None:
-        params = {'unit': 32, 't2v_dim': 128, 'act': 'relu'}
+        params = {'unit': 32, 't2v_dim': 128, 'act': 'leaky_relu'}
 
     model = T2V_NN(param=params, dim=X_train.shape[1])
     
@@ -106,7 +106,7 @@ def model_embeddings(X_train, params=None):
 
 def model_classifier(X_train, params=None):
     if params is None:
-        params = {'unit': 32, 't2v_dim': 128, 'act': 'relu'}
+        params = {'unit': 32, 't2v_dim': 128, 'act': 'leaky_relu'}
 
     model = T2V_NN_C(param=params, dim=X_train.shape[1])
     
