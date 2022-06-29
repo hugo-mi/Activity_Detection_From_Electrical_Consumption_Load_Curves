@@ -11,11 +11,15 @@ Pour obtenir cette courbe de charge de consommation normale synonyme d’inactiv
 - Sélectionner individuellement la consommation électrique de chacun des appareils permettant de prédire une activité 
     - => Approche moins généralisable car on ne connaît jamais à l’avance le nombre et le type d’appareils électriques utilisés au sein d’une maison. Mais cette méthode va mieux coller à nos données donc on pense avoir de meilleure résultat.
 
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/AE_Approach.png)
+
 # Méthodologie
 
 ## Pre-processing
 
 Dans notre cas nous l’étape de preprocessing est une étape cruciale. Donc on a décidé de rendre la phase de preprocessing entièrement paramétrable. Plusieurs paramètres qui régissent la création des séquences d’entraînement et de test doivent être choisis en amont. Cela permet alors au modèle de gagner en flexibilité mais aussi de pouvoir s’adapter au comportement de la consommation électrique quotidienne de n’importe quel foyer.
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/preprocessing.png)
 
 Les paramètres sont les suivants :
 
@@ -32,9 +36,13 @@ Pour construire notre jeu de test, on tire à aléatoirement **20%** des jours q
 
 Ensuite le preprocessing construit les différentes séquences qui se chevauchent. Par exemple, la sortie du preprocessing est un tableau en 3D [samples, sequence_length, features]
 
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/preprocessing1.png)
+
 ## Architecture de l'AEC
 
 L’architecture de l’auto-encodeur se compose d’une succession de couches de convolution puis déconvolution pour obtenir la reconstruction de l’entrée.
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/AEC_Architecture.png)
 
 ## Entraînement de l'AEC
 
@@ -46,9 +54,20 @@ L’objectif est de minimiser la fonction de coût de reconstruction. On a fait 
 
 Nous utilisons également un early stopping pour diminuer le temps d'entraînement lorsque la fonction de perte ne diminue pas.
 
+Hyperparamètres de l'entraînement: 
+
+- _epoch_ = **50**
+- _batch_size_ = **128**
+- _opimizer_ = **Adam**
+- _AEloss_ = **MSE**
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Entrainement_AEC.png)
+
 ## Visualisation de la courbe de reconstruction
 
 On peut observer comment l’AE apprend à reconstruire la première séquence de notre jeu d'entraînement.
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Courbe%20de%20reconstruction.png)
 
 On remarque que le à reconstruire la courbe de charge de base qui lui a été donnée en entrée.
 
@@ -62,38 +81,44 @@ Ensuite, on identifie la valeur maximale de la perte **MAE** . Cela correspond �
 
 Enfin, si la perte de reconstruction d’un échantillon est supérieure à cette valeur seuil, alors nous pouvons en déduire que le modèle fait face à un comportement qui ne lui est pas familier. Nous allons étiqueter cet échantillon (i.e séquence) comme une anomalie
 
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Compute_Threshold.png)
+
 ## Visualisation du threshold sur ``X_train`` et ``X_test``
 
 
 A ce stade, le modèle à appris à reconstruire la courbe de charge de base. Cela signifie que le modèle a appris à modéliser le comportement normal des activités quotidiennes d’un foyer. Sur cette base, la détection des anomalies peut être réalisée en évaluant tout simplement les écarts entre la courbe de charge de base apprise par le modèle et la courbe de charge quotidienne d’un foyer qui comprend des pics d’activité (i.e surconsommation électrique). Cet écart est calculé avec la fonction de perte Mean Absolute Error. Nous avons choisi cette fonction de perte car elle est plus robuste aux données aberrantes ce qui correspond dans notre cas aux anomalies. Sur les différents histogrammes, on voit l’évolution de cet écart pour le jeu d'entraînement et le jeu de test.
 
+**Train/Test MAE loss**
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/MAE_loss.png)
+
 ## Post-processing
 
 Le but du pré-processing est d’affiner les prédictions du modèle car il arrive parfois qu’un point de
-donnée se trouve à la fois dans une séquence prédite comme étant une anomalie et une séquence prédite
-n’étant pas une activité
+donnée se trouve à la fois dans une séquence prédite comme étant une anomalie et une séquence prédite n’étant pas une activité
 
-IMAGE
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/post_processing_dataframe.png)
 
 Par exemple, le point de données encadré en rouge sur l’image ci-dessus correspond à une donnée
-de consommation à la date du 26 avril 2016 à 06 :36 :00. Ce point de données appartient à plusieurs
-séquences qui se sont chevauchées à savoir la séquence n° 109 qui est prédite en non activité et les
-séquences n° 105, 106, 107 et 108 qui sont prédites comme étant des activités. Ainsi par vote majoritaire,
-le postprocessing prédit une activité pour cette date. Cela doit correspondre à la l’heure où la personne
-se lève le matin avant de se rendre au travail et prend une douche ou bien encore son petit déjeune
+de consommation à la date du 26 avril 2016 à 06 :36 :00. Ce point de données appartient à plusieurs séquences qui se sont chevauchées à savoir la séquence n° 109 qui est prédite en non activité et les séquences n° 105, 106, 107 et 108 qui sont prédites comme étant des activités. 
 
-## Evaluation du modèle
+Ainsi par vote majoritaire, le postprocessing prédit une activité pour cette date. Cela doit correspondre à la l’heure où la personne se lève le matin avant de se rendre au travail et prend une douche ou bien encore son petit déjeune
+
+## Evaluation du modèle sur le dataset _RAE: The Rainforest Automation Energy Dataset_
 
 **Matrice de confusion**
 
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/confusion_matrix.png)
+
 **Activité prédite VS Activité réelle**
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/activity_predicted_histogram.png)
 
 **IoU Threshold**
 
-## Discussion de l'approche
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/evaluation_direct_and_IoU.png)
 
 
+## Evaluation du modèle sur le dataset _UK-DALE_
 
-
-## Résultat
-
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/resultat_ukdale_AEC.png)
