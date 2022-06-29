@@ -81,8 +81,6 @@ jours (découpée en deux périodes de 9 puis 53 jours) et 59 jours. La premièr
 La deuxième maison est équipée de 21 sous-compteurs et est occupée par 3 occupants. Chaque sous-
 compteur a été étiqueté pour pouvoir facilement identifier la source de consommation. Du fait que les deux maisons soient situées au Canada, certains gros équipements sont répartis sur deux sous-compteurs.
 
-![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Architecture_NILM.png)
-
 ![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Dataset_Rainforest_House_1.png)
 
 ![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Dataset_Rainforest_House_2.png)
