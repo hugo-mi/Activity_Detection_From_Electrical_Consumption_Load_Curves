@@ -158,5 +158,17 @@ Il vise à découvrir la meilleure architecture pour un réseau de neurones pour
 
 ## Usage
 
-- Installation de l'environnement : ```bash conda env create -n AEC_env --file AEC_env.yml´´´´
-- Lancement de la pipeline ``\src`` : ```bash python3 main.py ```
+### Installation de l'environnement
+```console 
+$ conda env create -n AEC_env --file AEC_env.yml
+```
+
+### Lancement de la pipeline 
+
+```console
+cd \src
+```
+
+```console
+$ python3 main.py
+```
