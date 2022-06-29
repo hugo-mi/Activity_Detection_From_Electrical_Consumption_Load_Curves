@@ -15,6 +15,22 @@ Pour obtenir cette courbe de charge de consommation normale synonyme d’inactiv
 
 # Méthodologie
 
+# Pipeline du modèle
+
+1. Load dataset
+2. Convert user input
+3. Pre-processing (build sequences)
+4. Build model
+5. Train model
+6. Plot Reconstructed curve
+7. Compute Threshold
+8. Make predictions
+9. Detecting activities
+10. Post-processing (majority vote)
+11. Plot detected activities
+12. Evaluate model
+13. Plot Evaluation model (IoU threshold)
+
 ## Pre-processing
 
 Dans notre cas nous l’étape de preprocessing est une étape cruciale. Donc on a décidé de rendre la phase de preprocessing entièrement paramétrable. Plusieurs paramètres qui régissent la création des séquences d’entraînement et de test doivent être choisis en amont. Cela permet alors au modèle de gagner en flexibilité mais aussi de pouvoir s’adapter au comportement de la consommation électrique quotidienne de n’importe quel foyer.
@@ -122,3 +138,17 @@ Ainsi par vote majoritaire, le postprocessing prédit une activité pour cette d
 ## Evaluation du modèle sur le dataset _UK-DALE_
 
 ![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/resultat_ukdale_AEC.png)
+
+## Discussion de l'approche
+
+Finalement, à travers cette approche, l'idée est de se mettre dans le cas où un client souhaite "monitorer" son activité. Ainsi il s'agit simplement d'enregistrer la courbe de charge électrique agrégée du foyer pour une durée de 1 mois et ensuite entraîner le modèle avec cette dernière avant de pouvoir déployer le service de détection d'activité chez un utilisateur.
+
+## Future amélioration possibles
+
+### 1ère amélioration : Affinage du threshold de détection d'activité
+L’une des stratégie envisageable pour affiner la frontière de décision (i.e threshold de détection d'activité) du modèle serait de calculer le quantile plutôt que le "hard maximum" sur le jeu d’entraînement. Cela permet ainsi d’attribuer plus de flexibilité au modèle dans le choix threshold qui potentiellement risque de mal se généraliser.
+
+### 2ème amélioration : Fine-Tuning de l'architecture de l'Auto-Encodeur Convolutionnel
+Une seconde amélioration consiste à affiner l’architecture de l’auto-encodeur. Une architecture optimale pourrait améliorer les performances de détection d’activité du modèle. Pour trouver l’architecture optimale, il convient de réaliser ce que l’on appelle en machine learning un Neural architecture Search (NAS) qui est une technique d’automatisation de la conception de réseaux neuronaux artificiels (ANN).
+
+Il vise à découvrir la meilleure architecture pour un réseau de neurones pour un besoin spécifique. Le NAS prend essentiellement le processus d’un humain peaufinant manuellement un réseau de neurones et apprenant ce qui fonctionne bien, et automatise cette tâche pour découvrir des architectures plus complexes. Ce domaine représente un ensemble d’outils et de méthodes qui testeront et évalueront un grand nombre d’architectures dans un espace de recherche en utilisant une stratégie de recherche et sélec- tionneront celle qui répond le mieux aux objectifs d’un problème donné en maximisant (ou minimisant selon le cas d’usage) une métrique d’évaluation personnalisée
