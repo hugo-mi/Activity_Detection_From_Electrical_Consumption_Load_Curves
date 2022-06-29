@@ -67,12 +67,12 @@ L’architecture du processus d’identification de la courbe de charge de chaqu
 
 Dans une architecture NILM, les interactions entre les habitants, les consommations électriques de chaque appareil et le réseau électriques sont centralisée en un point de convergence. Ce point de convergence est la compteur intelligent. Un classifieur est directement intégré dans le compteur intelligent. Ce dernier est entraîné avec les données collectées pour chaque appareil par le compteur intelligent afin de prédire s’il y a activité ou non au sein d’un foyer à partir de la courbe de charge agrégée.
 
-## Méthodologie
-
-2 approches :
+## Les approches
 
 - Approche supervisée : ``Time2Vec`` et ``Boosting Classifier``
 - Approche non supervisée : ``Auto-Encodeur Convolutionnel``
+
+## La pipeline
 
 ![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/pipeline.png)
 
