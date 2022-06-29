@@ -51,16 +51,19 @@ L'objectif est donc de concevoir des algorithmes de Machine Learning qui vont pe
 ![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Load_Curve_Example.png)
 
 ## Technologie NILM (Non Intrusive Load Monitoring)
+
 L’idée de la reconnaissance d’activité a été étudiée en premier lieu dans le domaine de la santé pour détecter les situations d’urgence en surveillant les activités et les mouvements quotidiens des patients.
 Mais ces techniques de reconnaissance reposent souvent sur des capteurs supplémentaires et sont donc intrusives et peuvent être coûteuses. Le NILM comprend un ensemble de techniques pour la surveillance non intrusive de la charge. Son but est de déterminer les changements de tension et de courant entrant dans une maison et de déduire quels appareils sont utilisés dans la maison.
 
 La détection d'activité s’appuie sur la détection d’événements, par exemple, l’allumage et l’arrêt d’appareils et le changement de mode ou d’état de fonctionnement des appareils. Cela suppose alors que la variation de la charge est causée par un seul appareil or cela n’est pas toujours le cas en pratique
 
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/NILM_event_based_detection.png)
+
 ## Architecture d'un système NILM
 
 L’architecture du processus d’identification de la courbe de charge de chaque appareil électronique à partir de la courbe de charge totale du domicile se présente comme suit :
 
-IMAGE
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Architecture_NILM.png)
 
 Dans une architecture NILM, les interactions entre les habitants, les consommations électriques de chaque appareil et le réseau électriques sont centralisée en un point de convergence. Ce point de convergence est la compteur intelligent. Un classifieur est directement intégré dans le compteur intelligent. Ce dernier est entraîné avec les données collectées pour chaque appareil par le compteur intelligent afin de prédire s’il y a activité ou non au sein d’un foyer à partir de la courbe de charge agrégée.
 
@@ -78,8 +81,11 @@ jours (découpée en deux périodes de 9 puis 53 jours) et 59 jours. La premièr
 La deuxième maison est équipée de 21 sous-compteurs et est occupée par 3 occupants. Chaque sous-
 compteur a été étiqueté pour pouvoir facilement identifier la source de consommation. Du fait que les deux maisons soient situées au Canada, certains gros équipements sont répartis sur deux sous-compteurs.
 
-IMAGE 1 
-IMAGE 2
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Architecture_NILM.png)
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Dataset_Rainforest_House_1.png)
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Dataset_Rainforest_House_2.png)
 
 Afin de n’avoir qu’une mesure de puissance par équipement les sous-compteurs ont été regroupés dans la suite de l’étude.
 
@@ -88,7 +94,21 @@ puissance totale consommées dans les deux maison. Dans la maison 2 nous avons r
 On constate que dans la maison 1 la plus grosse consommation provient des sous-compteurs ’Rental
 Suite Sub-Panel’. Il s’agit d’un compteur pour le niveau inférieur complet (occupé par une personne), c’est-à-dire une courbe de puissance déjà agrégée.
 
-IMAGE
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/Repartition_Rainforest_House1_House2.png)
+
+###  UK-DALE
+
+Notre jeu de données présente deux maisons, ce qui nous a permis de tester nos approches et d’essayer de voir si nos modèlent se généralisent bien d’une maison à une autre. Pour aller plus loin il serait cependant intéressant d’avoir un jeu de données indépendant pour tester nos modèles sur d’autres scénarios.
+
+Pour cela nous avons utilisé le je de données provenant du papier The UK-DALE dataset, domestic
+appliance-level electricity demand and whole-house demand from five UK homes (Jack Kelly, 2015). Ce jeu de données est très riche puisqu’il comprend des relevés de puissances échantillonnés à 6 Hz sur cinq maisons au Royaume-Unis sur des durées allant de 39 à 234 jours. Chaque maison est découpée en plusieurs sous-compteurs qui correspondent tous à un appareil électrique. Les appareils électriques ne sont pas tous relevés mais chaque maison dispose du relevé total agrégé sur tout le logement.
+Nous avons fait le choix de labelliser la maison 2 de ce jeu de données car c’est la maison qui présente des relevés de mesure sur la plus grande période de temps (234 jours au total, 142 jours après réconciliation de toutes les mesures et nettoyage) et avec un bon niveau de détail au niveau des appareils électriques dont la puissance est mesurée.
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/uk_dale_dataset.png)
+
+On peut également observer le graphique circulaire de la répartition du pourcentage des puissances sur la puissance totale consommées ce logement.
+
+![](https://github.com/hugo-mi/Activity_Detection_From_Electrical_Consumption_Load_Curves/blob/main/Images/repartition_ukdale.png)
 
 ## Métrique d'évaluation
 
