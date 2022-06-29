@@ -198,3 +198,59 @@ def evaluate(pred, df_gt, display_plots=True):
 
         
     return (tau_range, map, mar)
+
+def AreaUnderCurve(curve):
+    area_curve = curve[:-1] + curve[1:]
+    quotients = [ area_curve / 2 for area_curve in area_curve]
+    return sum(quotients) / (len(curve)-1)
+
+def singleMetric(MAP, MAR, IoU_thresholds, tau=0.05, alpha=1, alpha_AUC=1, beta=1, mode = 1):
+    """
+    Args : 
+        - mode :
+            - 1 : AUC_MAP + alpha_AUC * AUC_MAR
+            - 2 : MAP(tau) + alpha * MAP(tau)
+    Returns : a single metric for the MAP and MAR curves
+    """
+    AUC_MAP =  AreaUnderCurve(MAP)
+    AUC_MAR =  AreaUnderCurve(MAR)
+    res1 = (AUC_MAP + alpha_AUC*AUC_MAR)/(1+alpha_AUC)
+    
+    idx = np.abs(IoU_thresholds - tau).argmin()
+    res2 = (MAP[idx] + alpha * MAR[idx])/(1+alpha)
+    
+    # --- Save performance in a text file ---
+    os.getcwd()
+    path = Path(os.getcwd())
+    path = path.parent.absolute() / 'reports' / 'performance_IoU_threshold.txt'
+        
+    
+    if mode == 1:
+        print("======== PERFORMANCE SUMMARY ========")
+        print('\n\n')
+        print('--- MODE ---')
+        print('AUC_MAP + alpha_AUC * AUC_MAR')
+        print('\nPERFORMANCE = ' + str(res1))
+        with open(path, 'w') as f:
+            f.write("======== PERFORMANCE SUMMARY ========")
+            f.write('\n\n')
+            f.write('--- MODE ---')
+            f.write('AUC_MAP + alpha_AUC * AUC_MAR')
+            f.write('\nPERFORMANCE = ' + str(res1))
+        return res1
+    elif mode == 2:
+        print("======== PERFORMANCE SUMMARY ========")
+        print('\n\n')
+        print('--- MODE ---')
+        print('MAP(tau) + alpha * MAP(tau)')
+        print('\nPERFORMANCE = ' + str(res2))
+        with open(path, 'w') as f:
+            f.write("======== PERFORMANCE SUMMARY ========")
+            f.write('\n\n')
+            f.write('--- MODE ---')
+            f.write('MAP(tau) + alpha * MAP(tau)')
+            f.write('\nPERFORMANCE = ' + str(res2))
+        return res2
+    else : 
+        raise ValueError("Invalid mode argument for singleMetric function")
+        

@@ -42,7 +42,7 @@ def data_preprocessing(timeframes: list
     """
     
     # Diplay preprocessing parameters
-    print("\n---- Post Processing Parameters ----")
+    print("\n---- Pre Processing Parameters ----")
     print("TIMEFRAMES = ", timeframes)
     print("SEQUENCE_LENGTH = ", sequence_length)
     print("RESAMPLE_PERIOD = ", resample_period)
