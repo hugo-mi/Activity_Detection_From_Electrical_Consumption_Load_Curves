@@ -4,9 +4,9 @@ ANOMALY SEQUENCES (After postprocessing)
 
 
 
-Number of anomaly anomaly data points (After postprocessing): 1616
+Number of anomaly anomaly data points (After postprocessing): 1664
 
 
 Indices of anomaly data points (After postprocessing):
 
-(array([   0,    1,    2, ..., 9005, 9006, 9007], dtype=int64),)
+(array([  64,   65,   66, ..., 9565, 9566, 9567], dtype=int64),)

@@ -27,7 +27,7 @@ from train_model import train
 
 # --- Import functions from eval_model.py ---
 sys.path.insert(0,'../src/models/')
-from eval_model import plot_train_val_loss, plot_reconstructed_base_load_curve, plot_activity_histogram, plot_activity_distibrution, confusion_matrix, evaluate
+from eval_model import plot_train_val_loss, plot_reconstructed_base_load_curve, plot_activity_histogram, plot_activity_distibrution, confusion_matrix, evaluate, singleMetric
 
 # --- Import functions from predict_model.py ---
 sys.path.insert(0,'../src/models/')
@@ -223,12 +223,15 @@ data_prediction_post_process = read_pickle_dataset("data_prediction.pkl")
 print("\n\nPLOTING DETECTED ANOMALIES (AFTER POST PROCESSING)...")
 plot_postprocessing_anomalies(data_prediction_post_process, test_df)
 
-# --- PLot direct and IoU threshold
-print("\n\nPLOTING EVALUATION PLOT (DIRECT AND IoU THRESHOLD)...")
-
-
+# --- Evaluation of the model
 y_pred = data_prediction_post_process[["Timestamp", METHOD]]
 y_true = df_load_curve[(df_load_curve.index>=y_pred["Timestamp"].min())&(df_load_curve.index<=y_pred["Timestamp"].max())].reset_index()[["datetime", "activity"]]
 y_true = y_true[y_true["datetime"].isin(y_pred["Timestamp"])] #restriction de y_true aux timestamps contenus dans y_pred
 
+# --- Plot direct and IoU threshold
+print("\n\nPLOTING EVALUATION PLOT (DIRECT AND IoU THRESHOLD)...")
 IoU_thresholds, MAP, MAR = evaluate(y_pred, y_true, display_plots=True)
+
+# --- Compute IoU score performance ---
+print("\n\n COMPUTE IoU SCORE PERFORMANCE...")
+performance = singleMetric(MAP, MAR, IoU_thresholds)
