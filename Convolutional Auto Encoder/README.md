@@ -166,7 +166,7 @@ $ conda env create -n AEC_env --file AEC_env.yml
 ### Lancement de la pipeline 
 
 ```console
-cd \src
+$ cd ../src
 ```
 
 ```console
