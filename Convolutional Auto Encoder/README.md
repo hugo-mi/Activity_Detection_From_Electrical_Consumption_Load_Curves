@@ -141,6 +141,9 @@ Ainsi par vote majoritaire, le postprocessing prédit une activité pour cette d
 
 ## Discussion de l'approche
 
+Au delà du fait que cette méthode est rapide à entraîner, le modèle est plus flexible et généralisable que le modèle Time2Vec car il n’a pas besoin des labels d’activité pour s'entraîner et le threshold de détection d’activité peut être ajusté très facilement en fonction des habitudes quotidienne d’un foyer. Le modèle bénéficie également d’une bonne explicabilité car la frontière de décision du modèle est connue à l'avance étant donné que le threshold de détection d’activité peut être connu est adapté pour chaque foyer. A l’inverse, le modèle est sensible aux choix des hyperparamètres ce qui rend son déploiement complexe.
+
+
 Finalement, à travers cette approche, l'idée est de se mettre dans le cas où un client souhaite "monitorer" son activité. Ainsi il s'agit simplement d'enregistrer la courbe de charge électrique agrégée du foyer pour une durée de 1 mois et ensuite entraîner le modèle avec cette dernière avant de pouvoir déployer le service de détection d'activité chez un utilisateur.
 
 ## Future amélioration possibles
