@@ -155,3 +155,8 @@ L’une des stratégie envisageable pour affiner la frontière de décision (i.e
 Une seconde amélioration consiste à affiner l’architecture de l’auto-encodeur. Une architecture optimale pourrait améliorer les performances de détection d’activité du modèle. Pour trouver l’architecture optimale, il convient de réaliser ce que l’on appelle en machine learning un Neural architecture Search (NAS) qui est une technique d’automatisation de la conception de réseaux neuronaux artificiels (ANN).
 
 Il vise à découvrir la meilleure architecture pour un réseau de neurones pour un besoin spécifique. Le NAS prend essentiellement le processus d’un humain peaufinant manuellement un réseau de neurones et apprenant ce qui fonctionne bien, et automatise cette tâche pour découvrir des architectures plus complexes. Ce domaine représente un ensemble d’outils et de méthodes qui testeront et évalueront un grand nombre d’architectures dans un espace de recherche en utilisant une stratégie de recherche et sélec- tionneront celle qui répond le mieux aux objectifs d’un problème donné en maximisant (ou minimisant selon le cas d’usage) une métrique d’évaluation personnalisée
+
+## Usage
+
+- Installation de l'environnement : ```bash conda env create -n AEC_env --file AEC_env.yml´´´´
+- Lancement de la pipeline ``\src`` : ```bash python3 main.py ```
