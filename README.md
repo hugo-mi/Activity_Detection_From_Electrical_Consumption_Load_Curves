@@ -123,3 +123,21 @@ On peut également observer le graphique circulaire de la répartition du pource
 * Recall
 * F-Score
 * IoU threshold
+
+### Results
+
+#### Anomalies détectées sur la courbe de charge (Après post-processing)
+
+![](Images/EvaluationMetric/detected_activity.png)
+
+#### Matrice de confusion
+
+![](Images/EvaluationMetric/conf_matrix.png)
+
+#### Histogramme des activités Réelles VS Prédites
+
+![](Images/EvaluationMetric/predicted_activity_vs_real_activity.png)
+
+#### Evaluation avec la métrqiue IoU Threshold
+
+![](Images/EvaluationMetric/IoU_threshold.png)
