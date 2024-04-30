@@ -2,7 +2,7 @@
 
 # Détection d'activité - Analyse d'une courbe de charge
 
-**_Projet fil rouge dans le cadre de la formation à Télécom Paris en lien avec l'entreprise Baalbek Management_**
+**_Projet fil rouge dans le cadre de la formation à Télécom Paris en lien avec une entreprise du secteur de l'énergie**
 
 ## Contexte
 
